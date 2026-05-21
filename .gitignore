@@ -1,0 +1,22 @@
+# 图片/二进制文件（太大，不适合 git 版本控制）
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.vsix
+*.ico
+
+# VS Code
+.vscode/
+
+# Claude
+.claude/
+
+# 临时文件
+*.tmp
+*.temp
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini

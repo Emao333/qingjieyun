@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="氢捷运">
+<meta name="theme-color" content="#f5f5f7">
+<title>氢捷运 — 移动加氢</title>
+<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIuawm+aApui/kCIsCiAgInNob3J0X25hbWUiOiAi5rCm5oKv6L+QIiwKICAic3RhcnRfdXJsIjogIi4v5rCm5oKv6L+QX0FQUC5odG1sIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZjVmNWY3IiwKICAidGhlbWVfY29sb3IiOiAiIzAwNzFlMyIsCiAgImljb25zIjogW10KfQ==">
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1d1d1f;
+    --text2: #86868b;
+    --text3: #6e6e73;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --green: #34c759;
+    --orange: #ff9500;
+    --red: #ff3b30;
+    --border: #d2d2d7;
+    --border-light: #e8e8ed;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+    --radius-sm: 10px;
+    --radius: 16px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+    --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    --tab-height: 84px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    max-width: 430px; margin: 0 auto; min-height: 100vh;
+    position: relative; overflow-x: hidden;
+    padding-bottom: calc(var(--tab-height) + var(--safe-bottom));
+  }
+  body::before {
+    content: ''; position: fixed; top:0; left:max(0px, calc((100vw - 430px) / 2)); right:max(0px, calc((100vw - 430px) / 2));
+    height: 100vh; background: #fff; z-index: -1;
+  }
+
+  /* ===== Status Bar ===== */
+  .status-bar {
+    height: env(safe-area-inset-top, 20px); background: rgba(245,245,247,0.85);
+    backdrop-filter: saturate(180%) blur(20px); position: sticky; top:0; z-index: 100;
+  }
+
+  /* ===== App Header ===== */
+  .app-header {
+    position: sticky; top: env(safe-area-inset-top, 20px); z-index: 99;
+    background: rgba(245,245,247,0.85); backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    padding: 0 16px; height: 48px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .app-header .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+  .app-header .logo span { color: var(--accent); }
+  .header-action {
+    font-size: 13px; color: var(--accent); font-weight: 500; background: none; border: none;
+    cursor: pointer; font-family: inherit;
+  }
+
+  /* ===== Pages ===== */
+  .page { display: none; padding: 0 16px 20px; animation: fadeIn 0.25s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== Login Page ===== */
+  .login-container { max-width: 340px; margin: 60px auto 0; text-align: center; padding: 0 16px; }
+  .login-logo { font-size: 48px; font-weight: 700; letter-spacing: -1px; margin-bottom: 8px; }
+  .login-logo span { color: var(--accent); }
+  .login-sub { font-size: 15px; color: var(--text2); margin-bottom: 40px; letter-spacing: -0.3px; }
+  .login-sub br { display: none; }
+
+  .login-tabs { display: flex; gap: 0; background: #e8e8ed; border-radius: 10px; padding: 3px; margin-bottom: 28px; }
+  .login-tab {
+    flex:1; padding: 10px; border: none; background: transparent; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+    color: var(--text3); font-family: inherit;
+  }
+  .login-tab.active { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  .login-panel { display: none; }
+  .login-panel.active { display: block; }
+
+  .phone-input-group {
+    display: flex; gap: 10px; background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 4px; align-items: center;
+  }
+  .phone-prefix { font-size: 15px; font-weight: 600; color: var(--text); padding: 0 4px 0 10px; white-space: nowrap; }
+  .phone-input {
+    flex:1; border: none; padding: 12px 8px; font-size: 17px; font-family: inherit;
+    background: transparent; outline: none; letter-spacing: 1px;
+  }
+  .phone-input::placeholder { color: #c7c7cc; letter-spacing: 0; }
+
+  .code-row { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
+  .code-input {
+    flex:1; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 17px; font-family: inherit; background: #fff; outline: none; letter-spacing: 4px; text-align: center;
+  }
+  .code-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+  .btn-code {
+    padding: 14px 16px; border: 1px solid var(--accent); background: transparent;
+    color: var(--accent); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; font-family: inherit; transition: var(--transition);
+  }
+  .btn-code:disabled { opacity: 0.4; cursor: not-allowed; border-color: var(--border); color: var(--text2); }
+
+  .btn-login {
+    width: 100%; margin-top: 24px; padding: 15px; border: none; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff; font-size: 17px; font-weight: 600; cursor: pointer;
+    transition: var(--transition); font-family: inherit; letter-spacing: -0.3px;
+  }
+  .btn-login:active { transform: scale(0.97); opacity: 0.8; }
+  .btn-login:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .divider-row { display: flex; align-items: center; gap: 14px; margin: 24px 0; }
+  .divider-line { flex:1; height: 1px; background: var(--border-light); }
+  .divider-text { font-size: 13px; color: var(--text2); }
+
+  .btn-wechat {
+    width: 100%; padding: 14px; border: 1px solid #07c160; background: #fff;
+    border-radius: var(--radius-sm); font-size: 16px; font-weight: 600; cursor: pointer;
+    color: #07c160; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: var(--transition); font-family: inherit;
+  }
+  .btn-wechat:active { background: #f0fff4; }
+  .wechat-icon { font-size: 22px; }
+
+  .agreement-text { font-size: 12px; color: var(--text2); margin-top: 20px; line-height: 1.6; }
+  .agreement-text a { color: var(--accent); text-decoration: none; }
+
+  /* ===== Home Page ===== */
+  .greeting { font-size: 28px; font-weight: 700; letter-spacing: -0.6px; margin: 8px 0 4px; }
+  .greeting-sub { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+
+  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .quick-action {
+    background: var(--card); border-radius: var(--radius); padding: 18px 16px;
+    border: 1px solid var(--border-light); cursor: pointer; transition: var(--transition);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .quick-action:active { transform: scale(0.97); background: #f5f5f7; }
+  .quick-action .qa-icon { font-size: 32px; }
+  .quick-action .qa-text { font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
+  .quick-action .qa-sub { font-size: 12px; color: var(--text2); }
+
+  .home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .home-stat {
+    background: var(--card); border-radius: var(--radius); padding: 18px 16px;
+    border: 1px solid var(--border-light);
+  }
+  .home-stat .hs-num { font-size: 28px; font-weight: 700; letter-spacing: -0.6px; color: var(--accent); }
+  .home-stat .hs-label { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  .service-banner {
+    background: linear-gradient(135deg, #0071e3, #005bb5); border-radius: var(--radius-lg);
+    padding: 20px; color: #fff; margin-bottom: 24px;
+  }
+  .service-banner h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.3px; }
+  .service-banner p { font-size: 13px; opacity: 0.85; margin-bottom: 12px; }
+  .service-banner .banner-btn {
+    display: inline-block; padding: 8px 18px; background: rgba(255,255,255,0.2);
+    border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.3); color: #fff;
+  }
+
+  .recent-orders-preview { margin-bottom: 24px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-header h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .section-header a { font-size: 14px; color: var(--accent); text-decoration: none; font-weight: 500; }
+
+  /* ===== Booking Page (Mobile) ===== */
+  .booking-tabs {
+    display: flex; gap: 0; background: #e8e8ed; border-radius: 10px; padding: 3px;
+    margin-bottom: 16px; overflow-x: auto;
+  }
+  .booking-tab {
+    flex:1; padding: 9px 12px; border: none; background: transparent; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition);
+    color: var(--text3); font-family: inherit; white-space: nowrap;
+  }
+  .booking-tab.active { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  .form-card {
+    background: var(--card); border-radius: var(--radius-lg); padding: 20px 16px;
+    border: 1px solid var(--border-light); margin-bottom: 16px;
+  }
+  .field-label {
+    font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .field-hint { font-size: 12px; color: var(--text2); font-weight: 400; }
+  .field-input, .field-select, .field-textarea {
+    width: 100%; padding: 13px 14px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 16px; font-family: inherit;
+    background: #fafafa; transition: var(--transition); color: var(--text);
+    -webkit-appearance: none;
+  }
+  .field-input:focus, .field-select:focus, .field-textarea:focus {
+    outline: none; border-color: var(--accent); background: #fff;
+    box-shadow: 0 0 0 3px rgba(0,113,227,0.08);
+  }
+  .field-textarea { resize: vertical; min-height: 60px; }
+  .field-select {
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .tag-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag-option { position: relative; }
+  .tag-option input { position: absolute; opacity: 0; }
+  .tag-option label {
+    display: block; padding: 10px 16px; border: 1px solid var(--border);
+    border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 500;
+    background: #fafafa; transition: var(--transition);
+  }
+  .tag-option input:checked + label { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .stepper { display: flex; align-items: center; gap: 0; }
+  .stepper-btn {
+    width: 42px; height: 42px; border: 1px solid var(--border); background: #fafafa;
+    font-size: 20px; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center;
+  }
+  .stepper-btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+  .stepper-btn:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .stepper-input {
+    width: 72px; height: 42px; border: 1px solid var(--border); border-left: none; border-right: none;
+    text-align: center; font-size: 17px; font-weight: 600; font-family: inherit; background: #fff;
+  }
+
+  .price-bar {
+    background: var(--card); border-radius: var(--radius-lg); padding: 16px;
+    border: 1px solid var(--border-light); margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .price-bar .pb-label { font-size: 14px; color: var(--text3); }
+  .price-bar .pb-total { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  .price-bar .pb-note { font-size: 11px; color: var(--text2); }
+
+  .btn-book {
+    width: 100%; padding: 16px; border: none; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff; font-size: 17px; font-weight: 600; cursor: pointer;
+    transition: var(--transition); font-family: inherit; letter-spacing: -0.3px;
+    margin-bottom: 20px;
+  }
+  .btn-book:active { transform: scale(0.97); opacity: 0.8; }
+
+  /* ===== Orders Page (Mobile) ===== */
+  .order-filter-row { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; }
+  .order-filter-chip {
+    padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px;
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    background: #fafafa; font-family: inherit; transition: var(--transition);
+  }
+  .order-filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .order-item {
+    background: var(--card); border-radius: var(--radius); padding: 16px;
+    border: 1px solid var(--border-light); margin-bottom: 10px;
+  }
+  .order-item .oi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .oi-status {
+    padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
+  }
+  .oi-confirmed { background: #e8f5e9; color: #2e7d32; }
+  .oi-pending { background: #fff3e0; color: #e65100; }
+  .oi-dispatched { background: #e3f2fd; color: #1565c0; }
+  .oi-enroute { background: #e3f2fd; color: #0d47a1; }
+  .oi-fueling { background: #f3e5f5; color: #7b1fa2; }
+  .oi-completed { background: #e8f5e9; color: #1b5e20; }
+  .oi-cancelled { background: #fce4ec; color: #c62828; }
+  .oi-body { font-size: 14px; }
+  .oi-body .oi-main { font-weight: 600; margin-bottom: 4px; }
+  .oi-body .oi-meta { font-size: 12px; color: var(--text2); margin-bottom: 2px; }
+  .oi-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .oi-btn {
+    padding: 8px 14px; border-radius: 18px; font-size: 12px; font-weight: 500;
+    cursor: pointer; font-family: inherit; transition: var(--transition);
+  }
+  .oi-btn-outline { border: 1px solid var(--border); background: #fff; color: var(--text); }
+  .oi-btn-danger { border: 1px solid var(--red); color: var(--red); background: transparent; }
+  .oi-btn-rate { border: 1px solid var(--orange); color: var(--orange); background: transparent; }
+
+  /* Progress dots */
+  .oi-progress { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
+  .oi-progress .dot { width: 8px; height: 8px; border-radius: 50%; background: #e8e8ed; transition: var(--transition); }
+  .oi-progress .dot.on { background: var(--accent); }
+  .oi-progress .dot.done { background: var(--green); }
+  .oi-progress .line { flex:1; height: 2px; background: #e8e8ed; max-width: 24px; }
+  .oi-progress .line.done { background: var(--green); }
+
+  /* ===== Profile Page ===== */
+  .profile-header {
+    text-align: center; padding: 24px 0 20px;
+  }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #0071e3, #5ac8fa);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px; font-size: 32px; color: #fff; font-weight: 700;
+  }
+  .profile-name { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+  .profile-phone { font-size: 14px; color: var(--text2); margin-top: 2px; }
+
+  .menu-list { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-light); margin-bottom: 16px; }
+  .menu-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px; border-bottom: 1px solid var(--border-light); cursor: pointer;
+    transition: background 0.15s; font-size: 15px;
+  }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item:active { background: #f5f5f7; }
+  .menu-item .mi-left { display: flex; align-items: center; gap: 12px; }
+  .menu-item .mi-icon { font-size: 20px; width: 24px; text-align: center; }
+  .menu-item .mi-arrow { color: #c7c7cc; font-size: 16px; }
+
+  .btn-logout {
+    width: 100%; padding: 15px; border: 1px solid var(--red); background: #fff;
+    color: var(--red); border-radius: var(--radius-sm); font-size: 16px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: var(--transition);
+  }
+  .btn-logout:active { background: #fef2f2; }
+
+  /* ===== Bottom Tab Bar ===== */
+  .tab-bar {
+    position: fixed; bottom:0; left:max(0px, calc((100vw - 430px) / 2)); right:max(0px, calc((100vw - 430px) / 2));
+    height: calc(var(--tab-height) + var(--safe-bottom)); z-index: 100;
+    background: rgba(255,255,255,0.88); backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid rgba(0,0,0,0.08);
+    display: flex; padding-bottom: var(--safe-bottom);
+  }
+  .tab-item {
+    flex:1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: var(--transition); gap: 4px; border: none; background: transparent;
+    font-family: inherit; color: var(--text3); padding: 8px 0;
+  }
+  .tab-item .tab-icon { font-size: 22px; transition: var(--transition); }
+  .tab-item .tab-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1px; }
+  .tab-item.active { color: var(--accent); }
+  .tab-item .tab-badge {
+    position: absolute; top: 4px; margin-left: 16px; background: var(--red); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+  }
+
+  /* ===== Toast ===== */
+  .toast-wrap {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 9999;
+    pointer-events: none;
+  }
+  .toast-inner {
+    background: #1d1d1f; color: #fff; padding: 11px 22px; border-radius: 22px;
+    font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(-10px);
+    transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+    white-space: nowrap; text-align: center;
+  }
+  .toast-inner.show { opacity: 1; transform: translateY(0); }
+
+  /* ===== Bottom Sheet Modal ===== */
+  .sheet-overlay {
+    display: none; position: fixed; inset:0; z-index: 200;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    align-items: flex-end; justify-content: center;
+  }
+  .sheet-overlay.show { display: flex; }
+  .sheet-box {
+    background: #fff; border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    width: 100%; max-width: 430px; max-height: 80vh; overflow-y: auto;
+    padding: 8px 20px calc(20px + var(--safe-bottom)); animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { width: 36px; height: 4px; background: #d2d2d7; border-radius: 2px; margin: 8px auto 16px; }
+  .sheet-box h2 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 16px; letter-spacing: -0.4px; }
+
+  /* ===== Loading ===== */
+  .loading-spinner {
+    display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Misc */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text2); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-state p { font-size: 15px; }
+
+  /* Desktop side padding */
+  @media (min-width: 431px) {
+    body { border-left: 1px solid var(--border-light); border-right: 1px solid var(--border-light); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Status bar spacer -->
+<div class="status-bar"></div>
+
+<!-- App Header -->
+<div class="app-header" id="appHeader">
+  <div class="logo">氢捷运<span>·</span>H₂</div>
+  <button class="header-action" id="headerAction" style="display:none;" onclick="logout()">退出</button>
+</div>
+
+<!-- ==================== LOGIN PAGE ==================== -->
+<div class="page active" id="page-login">
+  <div class="login-container">
+    <div class="login-logo">氢捷运<span>·</span>H₂</div>
+    <div class="login-sub">鄂尔多斯移动加氢服务平台</div>
+
+    <div class="login-tabs" id="loginTabs">
+      <button class="login-tab active" onclick="switchLoginTab('phone')">📱 手机登录</button>
+      <button class="login-tab" onclick="switchLoginTab('wechat')">💬 微信登录</button>
+    </div>
+
+    <!-- Phone Login -->
+    <div class="login-panel active" id="panel-phone">
+      <div class="phone-input-group">
+        <span class="phone-prefix">+86</span>
+        <input class="phone-input" id="phoneNumber" type="tel" placeholder="请输入手机号" maxlength="11" oninput="onPhoneInput()">
+      </div>
+      <div class="code-row">
+        <input class="code-input" id="smsCode" type="text" placeholder="验证码" maxlength="6" inputmode="numeric" oninput="onCodeInput()">
+        <button class="btn-code" id="btnGetCode" onclick="sendCode()" disabled>获取验证码</button>
+      </div>
+      <button class="btn-login" id="btnPhoneLogin" onclick="phoneLogin()" disabled>登录</button>
+      <p class="agreement-text">登录即表示同意 <a href="#">《用户服务协议》</a> 和 <a href="#">《隐私政策》</a></p>
+    </div>
+
+    <!-- WeChat Login -->
+    <div class="login-panel" id="panel-wechat">
+      <div style="padding: 20px 0; text-align: center;">
+        <div style="width:80px;height:80px;background:#f0f0f0;border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text2);">
+          二维码<br>模拟区
+        </div>
+        <p style="font-size:14px;color:var(--text3);margin-bottom:16px;">请使用微信扫描二维码</p>
+        <button class="btn-wechat" onclick="wechatLogin()">
+          <span class="wechat-icon">💬</span> 微信一键登录
+        </button>
+      </div>
+      <p class="agreement-text">登录即表示同意 <a href="#">《用户服务协议》</a> 和 <a href="#">《隐私政策》</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== HOME PAGE ==================== -->
+<div class="page" id="page-home">
+  <div class="greeting" id="greetingName">你好</div>
+  <div class="greeting-sub">鄂尔多斯移动加氢，送到你车前</div>
+
+  <div class="quick-actions">
+    <div class="quick-action" onclick="switchPage('book')">
+      <div class="qa-icon">📋</div>
+      <div><div class="qa-text">立即预约</div><div class="qa-sub">选择时间地点</div></div>
+    </div>
+    <div class="quick-action" onclick="switchPage('orders')">
+      <div class="qa-icon">📦</div>
+      <div><div class="qa-text">我的订单</div><div class="qa-sub">查看预约状态</div></div>
+    </div>
+  </div>
+
+  <div class="home-stats">
+    <div class="home-stat"><div class="hs-num" id="hsOrders">0</div><div class="hs-label">累计订单</div></div>
+    <div class="home-stat"><div class="hs-num" id="hsKg">0kg</div><div class="hs-label">累计加氢</div></div>
+  </div>
+
+  <div class="service-banner">
+    <h3>周期预约 · 省更多</h3>
+    <p>长期车队客户享36元/kg优惠价</p>
+    <span class="banner-btn" onclick="switchPage('book')">了解详情 →</span>
+  </div>
+
+  <div class="recent-orders-preview">
+    <div class="section-header"><h3>最近订单</h3><a href="#" onclick="switchPage('orders');return false;">查看全部 →</a></div>
+    <div id="recentOrdersList"></div>
+  </div>
+</div>
+
+<!-- ==================== BOOK PAGE ==================== -->
+<div class="page" id="page-book">
+  <div class="booking-tabs" id="bookingTabs">
+    <button class="booking-tab active" onclick="switchBookTab('single')">📋 单次预约</button>
+    <button class="booking-tab" onclick="switchBookTab('batch')">🚛 批量预约</button>
+    <button class="booking-tab" onclick="switchBookTab('recurring')">🔄 周期预约</button>
+  </div>
+
+  <!-- Single Booking -->
+  <div class="book-panel active" id="book-single">
+    <div class="form-card">
+      <div class="field-row" style="margin-bottom:12px;">
+        <div>
+          <div class="field-label">联系人</div>
+          <input class="field-input" id="mName" placeholder="姓名">
+        </div>
+        <div>
+          <div class="field-label">联系电话</div>
+          <input class="field-input" id="mPhone" placeholder="手机号" type="tel">
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">车辆类型</div>
+        <div class="tag-group">
+          <div class="tag-option"><input type="radio" name="mVehicle" value="heavy" id="mvh" checked><label for="mvh">🚛 重卡</label></div>
+          <div class="tag-option"><input type="radio" name="mVehicle" value="bus" id="mvb"><label for="mvb">🚌 公交</label></div>
+          <div class="tag-option"><input type="radio" name="mVehicle" value="other" id="mvo"><label for="mvo">🔧 其他</label></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">加氢量 (kg)</div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="mChangeKg(-10)">−</button>
+          <input class="stepper-input" id="mKg" type="number" value="120" min="10" max="390" onchange="mUpdatePrice()" oninput="mUpdatePrice()">
+          <button class="stepper-btn" onclick="mChangeKg(10)">+</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">服务区域</div>
+        <select class="field-select" id="mLocation" onchange="mUpdatePrice()">
+          <option value="">选择区域...</option>
+          <optgroup label="核心服务区">
+            <option value="蒙苏经济开发区">蒙苏经济开发区</option>
+            <option value="乌兰木伦镇">乌兰木伦镇</option>
+            <option value="棋盘井工业园">棋盘井工业园区</option>
+          </optgroup>
+          <optgroup label="扩展区 (+5元/kg)">
+            <option value="准格尔旗大路工业园">准格尔旗大路工业园</option>
+            <option value="准格尔旗薛家湾">准格尔旗薛家湾</option>
+          </optgroup>
+        </select>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">详细地址</div>
+        <input class="field-input" id="mAddress" placeholder="煤矿/停车场/物流园位置">
+      </div>
+      <div class="field-row" style="margin-bottom:12px;">
+        <div>
+          <div class="field-label">服务日期</div>
+          <input class="field-input" type="date" id="mDate" onchange="mUpdatePrice()">
+        </div>
+        <div>
+          <div class="field-label">时间段</div>
+          <select class="field-select" id="mTime" onchange="mUpdatePrice()">
+            <option value="">选择</option>
+            <option value="07:00-10:00">🌅 07-10</option>
+            <option value="10:00-13:00">☀️ 10-13</option>
+            <option value="13:00-16:00">🌤 13-16</option>
+            <option value="16:00-19:00">🌇 16-19</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">车辆数量</div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="mChangeVehicles(-1)">−</button>
+          <input class="stepper-input" id="mVehicles" type="number" value="4" min="1" max="13" onchange="mUpdatePrice()">
+          <button class="stepper-btn" onclick="mChangeVehicles(1)">+</button>
+        </div>
+      </div>
+      <div>
+        <div class="field-label">备注</div>
+        <textarea class="field-textarea" id="mNotes" placeholder="特殊要求（选填）"></textarea>
+      </div>
+    </div>
+
+    <div class="price-bar">
+      <div>
+        <div class="pb-label">预计费用</div>
+        <div class="pb-note" id="mPriceNote"></div>
+      </div>
+      <div class="pb-total" id="mTotalPrice">¥4,560</div>
+    </div>
+
+    <button class="btn-book" onclick="mSubmitOrder()">确认预约</button>
+  </div>
+
+  <!-- Batch Booking (simplified) -->
+  <div class="book-panel" id="book-batch" style="display:none;">
+    <div class="form-card">
+      <div class="field-row" style="margin-bottom:12px;">
+        <div><div class="field-label">联系人</div><input class="field-input" id="bmName" placeholder="姓名"></div>
+        <div><div class="field-label">电话</div><input class="field-input" id="bmPhone" placeholder="手机号"></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">服务区域</div>
+        <select class="field-select" id="bmLocation">
+          <option value="">选择区域...</option>
+          <option value="蒙苏经济开发区">蒙苏经济开发区</option>
+          <option value="乌兰木伦镇">乌兰木伦镇</option>
+          <option value="棋盘井工业园">棋盘井工业园区</option>
+        </select>
+      </div>
+      <div class="field-row" style="margin-bottom:12px;">
+        <div><div class="field-label">日期</div><input class="field-input" type="date" id="bmDate"></div>
+        <div><div class="field-label">时段</div><select class="field-select" id="bmTime"><option value="">选择</option><option value="07:00-10:00">🌅 07-10</option><option value="10:00-13:00">☀️ 10-13</option></select></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">车辆列表 <span class="field-hint">(每辆车的加氢量)</span></div>
+        <div id="bmVehicleList">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <span style="font-weight:700;font-size:14px;color:var(--accent);min-width:24px;">#1</span>
+            <input class="field-input" placeholder="车牌号" style="flex:1;">
+            <input class="field-input" type="number" value="30" min="10" style="width:80px;">
+            <span style="font-size:13px;color:var(--text2);">kg</span>
+          </div>
+        </div>
+        <button style="padding:10px;border:1px dashed var(--border);border-radius:var(--radius-sm);width:100%;background:transparent;color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;" onclick="bmAddVehicle()">+ 添加车辆</button>
+      </div>
+    </div>
+    <button class="btn-book" onclick="mSubmitBatchOrder()">提交批量预约</button>
+  </div>
+
+  <!-- Recurring Booking (simplified) -->
+  <div class="book-panel" id="book-recurring" style="display:none;">
+    <div class="form-card">
+      <div class="field-row" style="margin-bottom:12px;">
+        <div><div class="field-label">公司</div><input class="field-input" id="rmCompany" placeholder="公司名称"></div>
+        <div><div class="field-label">联系人</div><input class="field-input" id="rmName" placeholder="姓名"></div>
+      </div>
+      <div style="margin-bottom:12px;"><div class="field-label">电话</div><input class="field-input" id="rmPhone" placeholder="手机号"></div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">加氢频次</div>
+        <div class="tag-group">
+          <div class="tag-option"><input type="radio" name="rmFreq" value="daily" id="rmf1"><label for="rmf1">每日</label></div>
+          <div class="tag-option"><input type="radio" name="rmFreq" value="weekly" id="rmf2" checked><label for="rmf2">每周</label></div>
+          <div class="tag-option"><input type="radio" name="rmFreq" value="biweekly" id="rmf3"><label for="rmf3">每两周</label></div>
+        </div>
+      </div>
+      <div class="field-row" style="margin-bottom:12px;">
+        <div><div class="field-label">每次加氢量</div><input class="field-input" type="number" id="rmKg" value="120" min="30"></div>
+        <div><div class="field-label">车辆数</div><input class="field-input" type="number" id="rmVehicles" value="4" min="1"></div>
+      </div>
+      <div style="background:#fafafa;border-radius:var(--radius-sm);padding:12px;text-align:center;font-size:13px;">
+        周期优惠价 <strong style="color:var(--green);">36元/kg</strong>（标准价38元/kg）
+      </div>
+    </div>
+    <button class="btn-book" onclick="mSubmitRecurringOrder()">提交周期预约</button>
+  </div>
+</div>
+
+<!-- ==================== ORDERS PAGE ==================== -->
+<div class="page" id="page-orders">
+  <div class="order-filter-row" id="orderFilters">
+    <button class="order-filter-chip active" data-filter="all" onclick="mFilterOrders('all', this)">全部</button>
+    <button class="order-filter-chip" data-filter="active" onclick="mFilterOrders('active', this)">进行中</button>
+    <button class="order-filter-chip" data-filter="completed" onclick="mFilterOrders('completed', this)">已完成</button>
+    <button class="order-filter-chip" data-filter="cancelled" onclick="mFilterOrders('cancelled', this)">已取消</button>
+  </div>
+  <div id="mOrdersList"></div>
+</div>
+
+<!-- ==================== PROFILE PAGE ==================== -->
+<div class="page" id="page-profile">
+  <div class="profile-header">
+    <div class="avatar" id="profileAvatar">H</div>
+    <div class="profile-name" id="profileName">氢捷运用户</div>
+    <div class="profile-phone" id="profilePhone"></div>
+  </div>
+
+  <div class="menu-list">
+    <div class="menu-item" onclick="showToast('功能开发中')">
+      <div class="mi-left"><span class="mi-icon">🏢</span>企业认证</div>
+      <span class="mi-arrow">›</span>
+    </div>
+    <div class="menu-item" onclick="showToast('功能开发中')">
+      <div class="mi-left"><span class="mi-icon">💳</span>结算账户</div>
+      <span class="mi-arrow">›</span>
+    </div>
+    <div class="menu-item" onclick="showToast('功能开发中')">
+      <div class="mi-left"><span class="mi-icon">📊</span>消费报表</div>
+      <span class="mi-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="menu-list">
+    <div class="menu-item" onclick="showToast('功能开发中')">
+      <div class="mi-left"><span class="mi-icon">🔔</span>消息通知</div>
+      <span class="mi-arrow">›</span>
+    </div>
+    <div class="menu-item" onclick="showToast('功能开发中')">
+      <div class="mi-left"><span class="mi-icon">❓</span>帮助中心</div>
+      <span class="mi-arrow">›</span>
+    </div>
+    <div class="menu-item" onclick="showToast('功能开发中')">
+      <div class="mi-left"><span class="mi-icon">⚙️</span>设置</div>
+      <span class="mi-arrow">›</span>
+    </div>
+  </div>
+
+  <button class="btn-logout" onclick="logout()">退出登录</button>
+</div>
+
+<!-- ==================== BOTTOM TAB BAR ==================== -->
+<div class="tab-bar" id="tabBar" style="display:none;">
+  <button class="tab-item active" data-page="home" onclick="switchPage('home')">
+    <span class="tab-icon">🏠</span>
+    <span class="tab-label">首页</span>
+  </button>
+  <button class="tab-item" data-page="book" onclick="switchPage('book')">
+    <span class="tab-icon">📋</span>
+    <span class="tab-label">预约</span>
+  </button>
+  <button class="tab-item" data-page="orders" onclick="switchPage('orders')">
+    <span class="tab-icon">📦</span>
+    <span class="tab-label">订单</span>
+  </button>
+  <button class="tab-item" data-page="profile" onclick="switchPage('profile')">
+    <span class="tab-icon">👤</span>
+    <span class="tab-label">我的</span>
+  </button>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap"><div class="toast-inner" id="toast"></div></div>
+
+<!-- Success Sheet -->
+<div class="sheet-overlay" id="successSheet">
+  <div class="sheet-box">
+    <div class="sheet-handle"></div>
+    <div style="text-align:center;font-size:48px;margin-bottom:12px;">✅</div>
+    <h2>预约已提交</h2>
+    <p style="text-align:center;color:var(--text3);font-size:15px;margin-bottom:20px;" id="successMsg"></p>
+    <button class="btn-book" onclick="closeSuccessSheet()">知道了</button>
+  </div>
+</div>
+
+<!-- Rating Sheet -->
+<div class="sheet-overlay" id="ratingSheet">
+  <div class="sheet-box">
+    <div class="sheet-handle"></div>
+    <h2>服务评价</h2>
+    <p style="text-align:center;color:var(--text2);font-size:13px;" id="ratingOrderInfo"></p>
+    <div style="display:flex;gap:8px;justify-content:center;font-size:36px;margin:16px 0;" id="starRow">
+      <span style="cursor:pointer;color:#d2d2d7;" data-r="1" onclick="mSetRating(1)">★</span>
+      <span style="cursor:pointer;color:#d2d2d7;" data-r="2" onclick="mSetRating(2)">★</span>
+      <span style="cursor:pointer;color:#d2d2d7;" data-r="3" onclick="mSetRating(3)">★</span>
+      <span style="cursor:pointer;color:#d2d2d7;" data-r="4" onclick="mSetRating(4)">★</span>
+      <span style="cursor:pointer;color:#d2d2d7;" data-r="5" onclick="mSetRating(5)">★</span>
+    </div>
+    <textarea class="field-textarea" id="ratingComment" placeholder="分享您的体验..." style="margin-bottom:12px;"></textarea>
+    <button class="btn-book" onclick="mSubmitRating()">提交评价</button>
+  </div>
+</div>
+
+<script>
+// ========== APP STATE ==========
+const APP_KEY = 'h2_app_v1';
+let appState = {
+  isLoggedIn: false,
+  user: null, // { phone, name, avatar, loginType }
+  orders: [],
+  currentPage: 'login',
+  currentBookTab: 'single',
+  orderFilter: 'all',
+  ratingOrderId: null,
+  ratingValue: 0,
+  codeTimer: null,
+  codeCountdown: 0,
+};
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(APP_KEY));
+    if (saved) {
+      appState.isLoggedIn = saved.isLoggedIn || false;
+      appState.user = saved.user || null;
+      appState.orders = saved.orders || [];
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem(APP_KEY, JSON.stringify({
+    isLoggedIn: appState.isLoggedIn,
+    user: appState.user,
+    orders: appState.orders,
+  }));
+}
+
+// ========== NAVIGATION ==========
+function switchPage(page) {
+  if (!appState.isLoggedIn && page !== 'login') {
+    switchPage('login');
+    return;
+  }
+
+  appState.currentPage = page;
+
+  // Update pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const targetPage = document.getElementById('page-' + page);
+  if (targetPage) targetPage.classList.add('active');
+
+  // Update tab bar
+  document.querySelectorAll('.tab-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === page);
+  });
+
+  // Show/hide tab bar
+  const tabBar = document.getElementById('tabBar');
+  tabBar.style.display = (page === 'login') ? 'none' : 'flex';
+
+  // Show/hide header action
+  document.getElementById('headerAction').style.display = (page === 'login') ? 'none' : 'block';
+
+  // Refresh content
+  if (page === 'home') refreshHome();
+  if (page === 'orders') renderMobileOrders();
+  if (page === 'profile') refreshProfile();
+  if (page === 'book') mUpdatePrice();
+
+  // Scroll to top
+  window.scrollTo(0, 0);
+}
+
+function switchLoginTab(tab) {
+  document.querySelectorAll('#loginTabs .login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
+  if (tab === 'phone') {
+    document.querySelector('#loginTabs .login-tab:first-child').classList.add('active');
+    document.getElementById('panel-phone').classList.add('active');
+  } else {
+    document.querySelector('#loginTabs .login-tab:last-child').classList.add('active');
+    document.getElementById('panel-wechat').classList.add('active');
+  }
+}
+
+// ========== LOGIN ==========
+function onPhoneInput() {
+  const phone = document.getElementById('phoneNumber').value.replace(/\s/g, '');
+  document.getElementById('btnGetCode').disabled = phone.length !== 11;
+  checkLoginButton();
+}
+
+function onCodeInput() {
+  checkLoginButton();
+}
+
+function checkLoginButton() {
+  const phone = document.getElementById('phoneNumber').value.replace(/\s/g, '');
+  const code = document.getElementById('smsCode').value.trim();
+  document.getElementById('btnPhoneLogin').disabled = phone.length !== 11 || code.length < 4;
+}
+
+function sendCode() {
+  if (appState.codeTimer) return;
+  appState.codeCountdown = 60;
+  const btn = document.getElementById('btnGetCode');
+  btn.disabled = true;
+  btn.textContent = appState.codeCountdown + 's';
+
+  appState.codeTimer = setInterval(() => {
+    appState.codeCountdown--;
+    if (appState.codeCountdown <= 0) {
+      clearInterval(appState.codeTimer);
+      appState.codeTimer = null;
+      btn.textContent = '获取验证码';
+      btn.disabled = false;
+    } else {
+      btn.textContent = appState.codeCountdown + 's';
+    }
+  }, 1000);
+
+  showToast('验证码已发送（模拟：123456）');
+}
+
+function phoneLogin() {
+  const phone = document.getElementById('phoneNumber').value.replace(/\s/g, '');
+  const code = document.getElementById('smsCode').value.trim();
+
+  if (phone.length !== 11) { showToast('请输入正确的手机号'); return; }
+  if (code.length < 4) { showToast('请输入验证码'); return; }
+
+  // Simulate API call
+  const btn = document.getElementById('btnPhoneLogin');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>';
+
+  setTimeout(() => {
+    appState.isLoggedIn = true;
+    appState.user = {
+      phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+      rawPhone: phone,
+      name: '用户' + phone.slice(-4),
+      avatar: phone.slice(-2),
+      loginType: 'phone'
+    };
+    saveState();
+    btn.disabled = false;
+    btn.textContent = '登录';
+    switchPage('home');
+    showToast('登录成功');
+  }, 800);
+}
+
+function wechatLogin() {
+  showToast('微信登录中...');
+
+  setTimeout(() => {
+    appState.isLoggedIn = true;
+    appState.user = {
+      phone: '微信用户',
+      rawPhone: '',
+      name: '微信用户',
+      avatar: '微',
+      loginType: 'wechat'
+    };
+    saveState();
+    switchPage('home');
+    showToast('微信登录成功');
+  }, 1000);
+}
+
+function logout() {
+  if (!confirm('确定退出登录吗？')) return;
+  appState.isLoggedIn = false;
+  appState.user = null;
+  saveState();
+  document.getElementById('phoneNumber').value = '';
+  document.getElementById('smsCode').value = '';
+  document.getElementById('btnPhoneLogin').disabled = true;
+  document.getElementById('btnGetCode').disabled = true;
+  if (appState.codeTimer) { clearInterval(appState.codeTimer); appState.codeTimer = null; }
+  document.getElementById('btnGetCode').textContent = '获取验证码';
+  switchPage('login');
+}
+
+// ========== PRICING ==========
+const PRICING = {
+  basePrice: 38,
+  remoteSurcharge: 5,
+  recurringDiscount: 2,
+  coreZones: ['蒙苏经济开发区','乌兰木伦镇','阿勒腾席热镇','达拉特旗兴旺煤矿','达拉特旗亿利园区','棋盘井工业园'],
+  remoteZones: ['准格尔旗大路工业园','准格尔旗薛家湾'],
+  minOrder: 30,
+};
+
+function calcPrice(kg, location) {
+  let pricePerKg = PRICING.basePrice;
+  let note = '';
+  if (PRICING.remoteZones.includes(location)) {
+    pricePerKg += PRICING.remoteSurcharge;
+    note = '含远程费 +5元/kg';
+  }
+  return { pricePerKg, total: kg * pricePerKg, note };
+}
+
+// ========== BOOKING ==========
+function switchBookTab(tab) {
+  appState.currentBookTab = tab;
+  document.querySelectorAll('#bookingTabs .booking-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.book-panel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('book-' + tab);
+  if (panel) panel.style.display = 'block';
+  // highlight correct tab
+  const tabs = document.querySelectorAll('#bookingTabs .booking-tab');
+  const idx = { single: 0, batch: 1, recurring: 2 }[tab];
+  if (tabs[idx]) tabs[idx].classList.add('active');
+}
+
+function mUpdatePrice() {
+  const kg = parseInt(document.getElementById('mKg').value) || 0;
+  const loc = document.getElementById('mLocation').value;
+  const { pricePerKg, total, note } = calcPrice(kg, loc);
+  document.getElementById('mTotalPrice').textContent = '¥' + total.toLocaleString();
+  document.getElementById('mPriceNote').textContent = note || '标准价 38元/kg';
+}
+
+function mChangeKg(delta) {
+  const el = document.getElementById('mKg');
+  const v = (parseInt(el.value) || 0) + delta;
+  if (v >= 10 && v <= 390) { el.value = v; mUpdatePrice(); }
+}
+
+function mChangeVehicles(delta) {
+  const el = document.getElementById('mVehicles');
+  const v = (parseInt(el.value) || 1) + delta;
+  if (v >= 1 && v <= 13) {
+    el.value = v;
+    document.getElementById('mKg').value = v * 30;
+    mUpdatePrice();
+  }
+}
+
+function mSubmitOrder() {
+  const name = document.getElementById('mName').value.trim();
+  const phone = document.getElementById('mPhone').value.trim();
+  const location = document.getElementById('mLocation').value;
+  const address = document.getElementById('mAddress').value.trim();
+  const date = document.getElementById('mDate').value;
+  const time = document.getElementById('mTime').value;
+  const kg = parseInt(document.getElementById('mKg').value) || 0;
+  const vCount = parseInt(document.getElementById('mVehicles').value) || 0;
+  const vehicleType = document.querySelector('input[name="mVehicle"]:checked')?.value || 'heavy';
+  const notes = document.getElementById('mNotes').value.trim();
+
+  if (!name || !phone) { showToast('请填写联系人和电话'); return; }
+  if (!location) { showToast('请选择服务区域'); return; }
+  if (!date) { showToast('请选择日期'); return; }
+  if (!time) { showToast('请选择时间段'); return; }
+  if (kg < PRICING.minOrder) { showToast(`最低起订量 ${PRICING.minOrder} kg`); return; }
+
+  const { pricePerKg, total } = calcPrice(kg, location);
+  const vLabels = { heavy:'氢能重卡', bus:'氢能公交', other:'其他车型' };
+
+  const order = {
+    id: 'H2-' + Date.now().toString(36).toUpperCase(),
+    type: 'single',
+    name, phone, location, address, date, timeSlot: time,
+    kg, vCount, vehicleType, vehicleLabel: vLabels[vehicleType] || vehicleType,
+    pricePerKg, total, notes,
+    status: 'confirmed', progress: 1,
+    rating: null, ratingComment: '',
+    createdAt: new Date().toISOString()
+  };
+
+  appState.orders.unshift(order);
+  saveState();
+
+  document.getElementById('successMsg').innerHTML =
+    `<strong>${order.id}</strong><br>${order.kg}kg · ${order.vCount}辆车<br>¥${order.total.toLocaleString()}<br><br>30分钟内电话确认`;
+  document.getElementById('successSheet').classList.add('show');
+
+  // Reset form
+  document.getElementById('mName').value = '';
+  document.getElementById('mPhone').value = '';
+  document.getElementById('mAddress').value = '';
+  document.getElementById('mNotes').value = '';
+  mUpdatePrice();
+}
+
+function mSubmitBatchOrder() {
+  const name = document.getElementById('bmName').value.trim();
+  const phone = document.getElementById('bmPhone').value.trim();
+  const loc = document.getElementById('bmLocation').value;
+  const date = document.getElementById('bmDate').value;
+  const time = document.getElementById('bmTime').value;
+
+  if (!name || !phone) { showToast('请填写联系人和电话'); return; }
+  if (!loc) { showToast('请选择服务区域'); return; }
+  if (!date || !time) { showToast('请选择日期和时间'); return; }
+
+  const rows = document.querySelectorAll('#bmVehicleList > div');
+  let totalKg = 0;
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    totalKg += parseInt(inputs[1]?.value) || 0;
+  });
+
+  const order = {
+    id: 'H2-' + Date.now().toString(36).toUpperCase(),
+    type: 'batch',
+    name, phone, location: loc, date, timeSlot: time,
+    kg: totalKg, vCount: rows.length,
+    pricePerKg: PRICING.basePrice, total: totalKg * PRICING.basePrice,
+    status: 'confirmed', progress: 1,
+    rating: null, ratingComment: '',
+    createdAt: new Date().toISOString()
+  };
+
+  appState.orders.unshift(order);
+  saveState();
+
+  document.getElementById('successMsg').innerHTML =
+    `<strong>${order.id}</strong><br>${rows.length}辆车 · ${totalKg}kg<br>¥${order.total.toLocaleString()}<br><br>30分钟内电话确认`;
+  document.getElementById('successSheet').classList.add('show');
+}
+
+function mSubmitRecurringOrder() {
+  const company = document.getElementById('rmCompany').value.trim();
+  const name = document.getElementById('rmName').value.trim();
+  const phone = document.getElementById('rmPhone').value.trim();
+  const kg = parseInt(document.getElementById('rmKg').value) || 0;
+  const vehicles = parseInt(document.getElementById('rmVehicles').value) || 0;
+  const freq = document.querySelector('input[name="rmFreq"]:checked')?.value || 'weekly';
+  const freqLabels = { daily:'每日', weekly:'每周', biweekly:'每两周' };
+
+  if (!company || !name || !phone) { showToast('请填写完整信息'); return; }
+
+  const order = {
+    id: 'H2-' + Date.now().toString(36).toUpperCase(),
+    type: 'recurring',
+    company, name, phone,
+    freq, freqLabel: freqLabels[freq],
+    kg, vCount: vehicles,
+    pricePerKg: PRICING.basePrice - PRICING.recurringDiscount,
+    total: kg * (PRICING.basePrice - PRICING.recurringDiscount),
+    status: 'pending', progress: 0,
+    rating: null, ratingComment: '',
+    createdAt: new Date().toISOString()
+  };
+
+  appState.orders.unshift(order);
+  saveState();
+
+  document.getElementById('successMsg').innerHTML =
+    `<strong>周期预约 ${order.id}</strong><br>${freqLabels[freq]} · 每次${kg}kg/${vehicles}辆<br>优惠价 ${order.pricePerKg}元/kg<br><br>30分钟内电话确认`;
+  document.getElementById('successSheet').classList.add('show');
+}
+
+function closeSuccessSheet() {
+  document.getElementById('successSheet').classList.remove('show');
+  renderMobileOrders();
+  refreshHome();
+}
+
+function bmAddVehicle() {
+  const list = document.getElementById('bmVehicleList');
+  const count = list.querySelectorAll('div').length + 1;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px;';
+  row.innerHTML = `
+    <span style="font-weight:700;font-size:14px;color:var(--accent);min-width:24px;">#${count}</span>
+    <input class="field-input" placeholder="车牌号" style="flex:1;">
+    <input class="field-input" type="number" value="30" min="10" style="width:80px;">
+    <span style="font-size:13px;color:var(--text2);">kg</span>
+    <button style="border:none;background:none;color:var(--red);font-size:16px;cursor:pointer;padding:4px;" onclick="this.parentElement.remove();bmReindex()">✕</button>
+  `;
+  list.appendChild(row);
+}
+
+function bmReindex() {
+  document.querySelectorAll('#bmVehicleList > div').forEach((row, i) => {
+    row.querySelector('span').textContent = '#' + (i + 1);
+  });
+}
+
+// ========== ORDERS ==========
+function mFilterOrders(filter, btn) {
+  appState.orderFilter = filter;
+  document.querySelectorAll('#orderFilters .order-filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderMobileOrders();
+}
+
+function renderMobileOrders() {
+  let orders = appState.orders;
+  const f = appState.orderFilter;
+  if (f === 'active') orders = orders.filter(o => ['confirmed','pending','dispatched','enroute','fueling'].includes(o.status));
+  else if (f === 'completed') orders = orders.filter(o => o.status === 'completed');
+  else if (f === 'cancelled') orders = orders.filter(o => o.status === 'cancelled');
+
+  const container = document.getElementById('mOrdersList');
+  if (!container) return;
+
+  if (orders.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>暂无订单</p></div>`;
+    return;
+  }
+
+  const statusMap = {
+    confirmed: ['oi-confirmed','已确认'], pending: ['oi-pending','待确认'],
+    dispatched: ['oi-dispatched','已调度'], enroute: ['oi-enroute','配送中'],
+    fueling: ['oi-fueling','加注中'], completed: ['oi-completed','已完成'],
+    cancelled: ['oi-cancelled','已取消']
+  };
+
+  container.innerHTML = orders.map(o => {
+    const [sClass, sText] = statusMap[o.status] || ['oi-pending', o.status];
+    const canCancel = ['confirmed','pending'].includes(o.status);
+    const canRate = o.status === 'completed' && !o.rating;
+
+    // Progress
+    let progHTML = '';
+    if (o.progress >= 0) {
+      const labels = ['提交','确认','调度','配送','加注','完成'];
+      progHTML = '<div class="oi-progress">';
+      labels.forEach((l, i) => {
+        let dotClass = '';
+        if (o.progress > i) dotClass = 'done';
+        else if (o.progress === i) dotClass = 'on';
+        progHTML += `<div class="dot ${dotClass}"></div>`;
+        if (i < labels.length - 1) progHTML += `<div class="line ${o.progress > i ? 'done' : ''}"></div>`;
+      });
+      progHTML += '</div>';
+    }
+
+    let ratingHTML = '';
+    if (o.rating) {
+      ratingHTML = `<div style="font-size:12px;color:var(--orange);margin-top:4px;">⭐ ${'★'.repeat(o.rating)}${'☆'.repeat(5-o.rating)}</div>`;
+    }
+
+    return `<div class="order-item">
+      <div class="oi-header">
+        <span class="oi-status ${sClass}">${sText}</span>
+        <span style="font-weight:600;font-size:13px;">${o.id}</span>
+        ${o.type === 'recurring' ? '<span style="background:#f3e5f5;color:#7b1fa2;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;">周期</span>' : ''}
+      </div>
+      ${progHTML}
+      <div class="oi-body">
+        <div class="oi-main">${o.kg}kg · ${o.vCount}辆 · ¥${o.total.toLocaleString()}</div>
+        <div class="oi-meta">📍 ${o.location || ''} ${o.address || ''}</div>
+        <div class="oi-meta">📅 ${o.date || o.startDate || ''} ${o.timeSlot || ''}</div>
+        ${o.company ? `<div class="oi-meta">🏢 ${o.company}</div>` : ''}
+        ${o.name ? `<div class="oi-meta">👤 ${o.name} ${o.phone}</div>` : ''}
+        ${ratingHTML}
+      </div>
+      ${(canCancel || canRate) ? `<div class="oi-actions">
+        ${canCancel ? `<button class="oi-btn oi-btn-danger" onclick="mCancelOrder('${o.id}')">取消</button>` : ''}
+        ${canRate ? `<button class="oi-btn oi-btn-rate" onclick="mOpenRating('${o.id}')">⭐ 评价</button>` : ''}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Also update recent orders on home
+  renderRecentOrders();
+}
+
+function mCancelOrder(id) {
+  if (!confirm('确定取消此订单吗？\n服务前4小时可免费取消。')) return;
+  const idx = appState.orders.findIndex(o => o.id === id);
+  if (idx >= 0) {
+    appState.orders[idx].status = 'cancelled';
+    appState.orders[idx].progress = -1;
+    saveState();
+    renderMobileOrders();
+    refreshHome();
+    showToast('订单已取消');
+  }
+}
+
+function mOpenRating(id) {
+  appState.ratingOrderId = id;
+  appState.ratingValue = 0;
+  document.getElementById('ratingOrderInfo').textContent = '订单号：' + id;
+  document.getElementById('ratingComment').value = '';
+  document.querySelectorAll('#starRow span').forEach(s => s.style.color = '#d2d2d7');
+  document.getElementById('ratingSheet').classList.add('show');
+}
+
+function mSetRating(v) {
+  appState.ratingValue = v;
+  document.querySelectorAll('#starRow span').forEach((s, i) => {
+    s.style.color = i < v ? '#ff9500' : '#d2d2d7';
+  });
+}
+
+function mSubmitRating() {
+  if (appState.ratingValue === 0) { showToast('请选择评分'); return; }
+  const idx = appState.orders.findIndex(o => o.id === appState.ratingOrderId);
+  if (idx >= 0) {
+    appState.orders[idx].rating = appState.ratingValue;
+    appState.orders[idx].ratingComment = document.getElementById('ratingComment').value.trim();
+    saveState();
+    renderMobileOrders();
+    refreshHome();
+    showToast('感谢评价！');
+  }
+  document.getElementById('ratingSheet').classList.remove('show');
+  appState.ratingOrderId = null;
+}
+
+function renderRecentOrders() {
+  const container = document.getElementById('recentOrdersList');
+  if (!container) return;
+  const recent = appState.orders.slice(0, 3);
+  if (recent.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="padding:24px;"><p style="font-size:14px;">暂无订单</p></div>';
+    return;
+  }
+  container.innerHTML = recent.map(o => {
+    const statusText = { confirmed:'已确认', pending:'待确认', completed:'已完成', cancelled:'已取消' }[o.status] || o.status;
+    return `<div class="order-item" style="cursor:pointer;" onclick="switchPage('orders')">
+      <div class="oi-header">
+        <span class="oi-status ${o.status === 'cancelled' ? 'oi-cancelled' : 'oi-confirmed'}">${statusText}</span>
+        <span style="font-weight:600;font-size:13px;">${o.id}</span>
+      </div>
+      <div class="oi-body">
+        <div class="oi-main">${o.kg}kg · ¥${o.total.toLocaleString()}</div>
+        <div class="oi-meta">📅 ${o.date || o.startDate || ''} ${o.timeSlot || ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ========== HOME ==========
+function refreshHome() {
+  if (appState.user) {
+    document.getElementById('greetingName').textContent =
+      (appState.user.loginType === 'wechat' ? '' : '你好，') + appState.user.name;
+  }
+
+  const all = appState.orders;
+  const active = all.filter(o => !['completed','cancelled'].includes(o.status));
+  const totalKg = all.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.kg || 0), 0);
+  document.getElementById('hsOrders').textContent = all.filter(o => o.status !== 'cancelled').length;
+  document.getElementById('hsKg').textContent = totalKg.toLocaleString() + 'kg';
+
+  renderRecentOrders();
+}
+
+function refreshProfile() {
+  if (appState.user) {
+    document.getElementById('profileName').textContent = appState.user.name;
+    document.getElementById('profilePhone').textContent = appState.user.phone;
+    document.getElementById('profileAvatar').textContent = appState.user.avatar || 'H';
+  }
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ========== INIT ==========
+loadState();
+
+// Set default date to tomorrow
+const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+const ds = tomorrow.toISOString().split('T')[0];
+const mDateEl = document.getElementById('mDate');
+const bmDateEl = document.getElementById('bmDate');
+if (mDateEl) mDateEl.value = ds;
+if (bmDateEl) bmDateEl.value = ds;
+
+// Initial render
+if (appState.isLoggedIn) {
+  switchPage('home');
+} else {
+  switchPage('login');
+}
+
+mUpdatePrice();
+refreshHome();
+refreshProfile();
+
+console.log('氢捷运 APP 已就绪');
+console.log('测试登录：输入任意11位手机号 + 验证码 123456');
+</script>
+
+</body>
+</html>

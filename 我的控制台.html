@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的控制台</title>
+<style>
+  :root {
+    --bg: #f5f5f5;
+    --card-bg: #ffffff;
+    --text: #333;
+    --border: #e0e0e0;
+    --accent: #2563eb;
+    --danger: #dc2626;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* 顶部工具栏 */
+  .toolbar {
+    position: sticky; top:0; z-index:100;
+    background: #1e293b; color: #fff; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap:16px; flex-wrap: wrap;
+  }
+  .toolbar h1 { font-size: 18px; font-weight: 600; }
+  .toolbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 13px; font-weight: 500; transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-outline { background: transparent; color: #fff; border: 1px solid #475569; }
+  .btn-outline:hover { background: #334155; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-green { background: #16a34a; color: #fff; }
+  .btn-green:hover { background: #15803d; }
+  .badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 10px;
+    background: #fef3c7; color: #92400e;
+  }
+  .badge.edit { background: #fecaca; color: #991b1b; }
+
+  /* 主内容区 */
+  .main { max-width: 900px; margin: 24px auto; padding: 0 20px 80px; }
+
+  /* 空状态 */
+  .empty-state {
+    text-align:center; padding:60px 20px; color:#94a3b8;
+  }
+  .empty-state .icon { font-size:48px; margin-bottom:12px; }
+  .empty-state p { margin-bottom:16px; }
+
+  /* 内容卡片 */
+  .block {
+    background: var(--card-bg); border-radius: 10px; padding: 24px;
+    margin-bottom: 16px; box-shadow: var(--shadow); position: relative;
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+  .block:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .block.editing { border: 2px dashed var(--accent); }
+
+  /* 编辑模式下的操控按钮 */
+  .block-actions {
+    display: none; position: absolute; top: 12px; right: 12px;
+    gap: 4px; z-index: 10;
+  }
+  body.edit-mode .block-actions { display: flex; }
+  body.edit-mode .block { cursor: grab; padding-top: 48px; }
+  body.edit-mode .block:active { cursor: grabbing; transform: scale(1.01); }
+
+  .block-actions .btn-icon {
+    width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+    background: #fff; cursor: pointer; font-size: 16px; display: flex;
+    align-items: center; justify-content: center; transition: 0.15s;
+  }
+  .block-actions .btn-icon:hover { background: #f1f5f9; border-color: #94a3b8; }
+  .btn-icon.del:hover { background: #fef2f2; border-color: #fca5a5; color: var(--danger); }
+
+  /* 块类型样式 */
+  .block-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .block-heading { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #1e293b; }
+  .block-text { font-size: 15px; line-height: 1.8; color: #475569; }
+  .block-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .block-table th { background: #f8fafc; text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); font-weight: 600; }
+  .block-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .block-table tr:hover td { background: #f8fafc; }
+  .block-quote { border-left: 4px solid var(--accent); padding: 12px 16px; background: #f8fafc; border-radius: 0 6px 6px 0; font-style: italic; color: #64748b; }
+  .block-divider { border: none; border-top: 2px solid var(--border); margin: 8px 0; }
+  .block-image { max-width: 100%; border-radius: 8px; }
+  .block-link { color: var(--accent); text-decoration: underline; font-size: 15px; }
+  .block-code { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; font-family: 'Consolas', 'Microsoft YaHei', monospace; font-size: 13px; overflow-x: auto; white-space: pre-wrap; }
+
+  /* 添加块面板 */
+  .add-panel {
+    display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; border-radius: 12px; padding: 8px; z-index: 200;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  body.edit-mode .add-panel { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+  .add-btn {
+    padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer;
+    background: transparent; color: #cbd5e1; font-size: 13px; transition: 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .add-btn:hover { background: #334155; color: #fff; }
+
+  /* 模态编辑框 */
+  .modal-overlay {
+    display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; width: 90%; max-width: 700px; max-height: 85vh;
+    overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h3 { font-size: 16px; }
+  .modal-body { padding: 20px; }
+  .modal-body label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; color: #64748b; }
+  .modal-body input, .modal-body textarea, .modal-body select {
+    width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 14px; font-family: inherit; margin-bottom: 16px; transition: border-color 0.15s;
+  }
+  .modal-body input:focus, .modal-body textarea:focus { outline: none; border-color: var(--accent); }
+  .modal-body textarea { min-height: 100px; resize: vertical; }
+  .modal-body .row { display: flex; gap: 12px; }
+  .modal-body .row > * { flex: 1; }
+  .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 80px; right: 24px; z-index: 500;
+    background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 8px;
+    font-size: 14px; opacity: 0; transform: translateX(20px); transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(0); }
+
+  @media (max-width: 600px) {
+    .toolbar { padding: 10px 14px; }
+    .toolbar h1 { font-size: 15px; }
+    .btn { padding: 6px 10px; font-size: 12px; }
+    .block { padding: 16px; }
+    .block-title { font-size: 18px; }
+    .modal { width: 95%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 工具栏 -->
+<div class="toolbar">
+  <h1>📋 我的控制台</h1>
+  <div class="toolbar-right">
+    <span id="statusBadge" class="badge">浏览模式</span>
+    <button class="btn btn-outline btn-sm" onclick="exportJSON()">📥 导出JSON</button>
+    <label class="btn btn-outline btn-sm" style="cursor:pointer;">
+      📤 导入 <input type="file" accept=".json" onchange="importJSON(event)" style="display:none;">
+    </label>
+    <button class="btn btn-outline btn-sm" onclick="resetAll()">🔄 重置</button>
+    <button class="btn btn-primary" id="toggleEditBtn" onclick="toggleEdit()">✏️ 开启编辑</button>
+  </div>
+</div>
+
+<!-- 内容区域 -->
+<div class="main" id="contentArea"></div>
+
+<!-- 空状态提示 -->
+<div class="empty-state" id="emptyState">
+  <div class="icon">📝</div>
+  <p>页面还是空的，点击上方 <strong>"开启编辑"</strong> 按钮开始添加内容</p>
+  <button class="btn btn-primary" onclick="toggleEdit()">✏️ 开始编辑</button>
+</div>
+
+<!-- 添加块面板（编辑模式时浮动在底部） -->
+<div class="add-panel" id="addPanel">
+  <button class="add-btn" onclick="addBlock('title')">📌 标题</button>
+  <button class="add-btn" onclick="addBlock('heading')">🔖 小标题</button>
+  <button class="add-btn" onclick="addBlock('text')">📝 文本</button>
+  <button class="add-btn" onclick="addBlock('table')">📊 表格</button>
+  <button class="add-btn" onclick="addBlock('quote')">💬 引用</button>
+  <button class="add-btn" onclick="addBlock('code')">💻 代码</button>
+  <button class="add-btn" onclick="addBlock('divider')">➖ 分隔线</button>
+  <button class="add-btn" onclick="addBlock('link')">🔗 链接</button>
+</div>
+
+<!-- 编辑模态框 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">编辑内容</h3>
+      <button class="btn-icon del" style="border:none;font-size:18px;" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" style="color:#333;border-color:#ccc;" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveBlock()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== 数据管理 ==========
+const STORAGE_KEY = 'my_console_blocks';
+
+function loadBlocks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveBlocks(blocks) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
+}
+
+let blocks = loadBlocks();
+let editMode = false;
+let editingIndex = -1; // 正在编辑的块索引，-1=新建
+
+// ========== 渲染 ==========
+function renderAll() {
+  const area = document.getElementById('contentArea');
+  const empty = document.getElementById('emptyState');
+
+  if (blocks.length === 0) {
+    area.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    area.innerHTML = blocks.map((b, i) => renderBlock(b, i)).join('');
+  }
+}
+
+function renderBlock(b, i) {
+  let content = '';
+  switch (b.type) {
+    case 'title':
+      content = `<div class="block-title">${esc(b.content)}</div>`;
+      break;
+    case 'heading':
+      content = `<div class="block-heading">${esc(b.content)}</div>`;
+      break;
+    case 'text':
+      content = `<div class="block-text">${esc(b.content).replace(/\n/g, '<br>')}</div>`;
+      break;
+    case 'quote':
+      content = `<div class="block-quote">${esc(b.content)}</div>`;
+      break;
+    case 'code':
+      content = `<div class="block-code">${esc(b.content)}</div>`;
+      break;
+    case 'divider':
+      content = `<hr class="block-divider">`;
+      break;
+    case 'link':
+      content = `<a class="block-link" href="${esc(b.url || '#')}" target="_blank">${esc(b.content)}</a>`;
+      break;
+    case 'table':
+      const rows = b.rows || [['列1','列2'],['数据1','数据2']];
+      const header = rows[0];
+      const body = rows.slice(1);
+      content = `<table class="block-table">
+        <thead><tr>${header.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+        <tbody>${body.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>`;
+      break;
+    default:
+      content = '';
+  }
+
+  return `<div class="block" data-index="${i}">
+    <div class="block-actions">
+      <button class="btn-icon" title="上移" onclick="moveBlock(${i}, -1)">⬆</button>
+      <button class="btn-icon" title="下移" onclick="moveBlock(${i}, 1)">⬇</button>
+      <button class="btn-icon" title="编辑" onclick="openEditModal(${i})">✏️</button>
+      <button class="btn-icon del" title="删除" onclick="deleteBlock(${i})">🗑</button>
+    </div>
+    ${content}
+  </div>`;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ========== 编辑模式切换 ==========
+function toggleEdit() {
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  const btn = document.getElementById('toggleEditBtn');
+  const badge = document.getElementById('statusBadge');
+
+  if (editMode) {
+    btn.textContent = '👁️ 退出编辑';
+    btn.className = 'btn btn-green';
+    badge.textContent = '编辑模式';
+    badge.className = 'badge edit';
+    showToast('编辑模式已开启，点击下方按钮添加内容块');
+  } else {
+    btn.textContent = '✏️ 开启编辑';
+    btn.className = 'btn btn-primary';
+    badge.textContent = '浏览模式';
+    badge.className = 'badge';
+    closeModal();
+    showToast('已切换到浏览模式');
+  }
+}
+
+// ========== 块操作 ==========
+function addBlock(type) {
+  const defaults = {
+    title: { type:'title', content:'新标题' },
+    heading: { type:'heading', content:'新小标题' },
+    text: { type:'text', content:'在这里输入文本内容。' },
+    quote: { type:'quote', content:'引用内容...' },
+    code: { type:'code', content:'// 代码内容' },
+    divider: { type:'divider', content:'' },
+    link: { type:'link', content:'链接文字', url:'https://' },
+    table: { type:'table', rows:[['列1','列2','列3'],['','','']] }
+  };
+  const block = JSON.parse(JSON.stringify(defaults[type] || defaults.text));
+  blocks.push(block);
+  saveBlocks(blocks);
+  renderAll();
+  showToast(`已添加 ${getTypeName(type)}`);
+}
+
+function deleteBlock(i) {
+  if (confirm(`确认删除第 ${i+1} 个内容块？`)) {
+    blocks.splice(i, 1);
+    saveBlocks(blocks);
+    renderAll();
+    showToast('已删除');
+  }
+}
+
+function moveBlock(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= blocks.length) return;
+  [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+  saveBlocks(blocks);
+  renderAll();
+}
+
+// ========== 编辑模态框 ==========
+function openEditModal(i) {
+  editingIndex = i;
+  const b = blocks[i];
+  document.getElementById('modalTitle').textContent = `编辑 — ${getTypeName(b.type)}`;
+  document.getElementById('modalBody').innerHTML = buildModalForm(b);
+  document.getElementById('modal').classList.add('show');
+}
+
+function buildModalForm(b) {
+  let html = `<label>类型</label><select id="editType" onchange="onTypeChange()">`;
+  const types = ['title','heading','text','quote','code','divider','link','table'];
+  html += types.map(t => `<option value="${t}" ${b.type===t?'selected':''}>${getTypeName(t)}</option>`).join('');
+  html += '</select>';
+
+  if (b.type !== 'divider') {
+    html += `<label>内容</label>`;
+    if (b.type === 'table') {
+      const rows = b.rows || [['',''],['','']];
+      html += `<textarea id="editRows" rows="6" placeholder="每行用逗号分隔列&#10;第一行为表头">${rows.map(r => r.join(',')).join('\n')}</textarea>`;
+      html += `<small style="color:#94a3b8;">第一行是表头，逗号分隔列</small>`;
+    } else {
+      html += `<textarea id="editContent" rows="5">${esc(b.content || '')}</textarea>`;
+    }
+  }
+
+  if (b.type === 'link') {
+    html += `<label>URL地址</label><input id="editUrl" value="${esc(b.url || '')}" placeholder="https://...">`;
+  }
+
+  return html;
+}
+
+function onTypeChange() {
+  const newType = document.getElementById('editType').value;
+  const old = blocks[editingIndex];
+  const b = { type: newType, content: old.content || '', url: old.url || '', rows: old.rows || [] };
+  document.getElementById('modalBody').innerHTML = buildModalForm(b);
+}
+
+function saveBlock() {
+  const b = blocks[editingIndex];
+  const newType = document.getElementById('editType').value;
+  b.type = newType;
+
+  if (newType === 'table') {
+    const raw = document.getElementById('editRows').value;
+    b.rows = raw.split('\n').map(line => line.split(',').map(c => c.trim()));
+  } else if (newType !== 'divider') {
+    const contentEl = document.getElementById('editContent');
+    if (contentEl) b.content = contentEl.value;
+  }
+
+  if (newType === 'link') {
+    const urlEl = document.getElementById('editUrl');
+    if (urlEl) b.url = urlEl.value;
+  }
+
+  saveBlocks(blocks);
+  renderAll();
+  closeModal();
+  showToast('已保存');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  editingIndex = -1;
+}
+
+// ========== 导入导出 ==========
+function exportJSON() {
+  const json = JSON.stringify(blocks, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '我的控制台_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  showToast('已导出 JSON 文件');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('格式错误');
+      blocks = data;
+      saveBlocks(blocks);
+      renderAll();
+      showToast(`已导入 ${blocks.length} 个内容块`);
+    } catch (err) {
+      alert('导入失败：文件格式不正确，需要 JSON 数组');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function resetAll() {
+  if (confirm('确定要清空所有内容吗？此操作不可撤销。')) {
+    blocks = [];
+    saveBlocks(blocks);
+    renderAll();
+    showToast('已清空');
+  }
+}
+
+// ========== 工具函数 ==========
+function getTypeName(t) {
+  const map = { title:'标题', heading:'小标题', text:'文本', table:'表格', quote:'引用', code:'代码', divider:'分隔线', link:'链接' };
+  return map[t] || t;
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// 点击模态框外部关闭
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// 键盘快捷键
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'e') { e.preventDefault(); toggleEdit(); }
+  if (e.key === 'Escape') { closeModal(); }
+});
+
+// ========== 初始加载 ==========
+renderAll();
+</script>
+
+</body>
+</html>
