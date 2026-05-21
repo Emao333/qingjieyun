@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>氢捷运 — 移动加氢服务</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1d1d1f;
+    --text2: #86868b;
+    --text3: #6e6e73;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --green: #34c759;
+    --orange: #ff9500;
+    --red: #ff3b30;
+    --teal: #5ac8fa;
+    --purple: #af52de;
+    --border: #d2d2d7;
+    --border-light: #e8e8ed;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.06);
+    --shadow-lg: 0 20px 60px rgba(0,0,0,0.1);
+    --radius-sm: 12px;
+    --radius: 18px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+    --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ===== Navigation ===== */
+  .nav {
+    position: fixed; top:0; left:0; right:0; z-index: 100;
+    background: rgba(245,245,247,0.72); backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  .nav-inner {
+    max-width: 1200px; margin:0 auto; padding: 0 24px;
+    height: 52px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+  .nav-links a { text-decoration: none; color: var(--text3); font-size: 13px; font-weight: 500; transition: color 0.2s; letter-spacing: -0.2px; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-badge {
+    background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px; margin-left: -4px; letter-spacing: 0.2px;
+  }
+  .nav-cta {
+    background: var(--accent); color: #fff; border: none; padding: 8px 18px;
+    border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition);
+    letter-spacing: -0.2px;
+  }
+  .nav-cta:hover { background: var(--accent-hover); transform: scale(1.02); }
+
+  /* ===== Hero ===== */
+  .hero {
+    padding: 120px 24px 80px; text-align: center; max-width: 800px; margin: 0 auto;
+  }
+  .hero-badge {
+    display: inline-block; padding: 6px 16px; border-radius: 20px;
+    background: #e8f5e9; color: #2e7d32; font-size: 13px; font-weight: 600; margin-bottom: 24px;
+    letter-spacing: -0.2px;
+  }
+  .hero h1 {
+    font-size: 56px; font-weight: 700; letter-spacing: -1.5px; line-height: 1.1;
+    margin-bottom: 20px; color: var(--text);
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 19px; color: var(--text3); line-height: 1.6; max-width: 540px;
+    margin: 0 auto 36px; letter-spacing: -0.3px; font-weight: 400;
+  }
+  .hero-stats { display: flex; justify-content: center; gap: 48px; margin-top: 12px; flex-wrap: wrap; }
+  .hero-stat { text-align: center; }
+  .hero-stat .num { font-size: 32px; font-weight: 700; letter-spacing: -0.8px; color: var(--text); }
+  .hero-stat .label { font-size: 13px; color: var(--text2); margin-top: 4px; letter-spacing: -0.2px; }
+
+  /* ===== Sections ===== */
+  .section { max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+  .section-title {
+    font-size: 32px; font-weight: 700; letter-spacing: -0.8px; margin-bottom: 8px;
+  }
+  .section-sub {
+    font-size: 16px; color: var(--text2); margin-bottom: 40px; letter-spacing: -0.3px;
+  }
+
+  /* ===== Tabs ===== */
+  .tabs {
+    display: flex; gap: 4px; background: #e8e8ed; border-radius: 10px; padding: 3px;
+    margin-bottom: 24px; width: fit-content;
+  }
+  .tab-btn {
+    padding: 9px 20px; border: none; background: transparent; border-radius: 8px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition);
+    color: var(--text3); letter-spacing: -0.2px; font-family: inherit; white-space: nowrap;
+  }
+  .tab-btn.active { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ===== Booking Layout ===== */
+  .booking-layout { display: grid; grid-template-columns: 1fr 400px; gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .booking-layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border-radius: var(--radius-lg); padding: 28px;
+    box-shadow: var(--shadow-sm); transition: var(--transition);
+    border: 1px solid var(--border-light);
+  }
+  .card:hover { box-shadow: var(--shadow-md); }
+
+  .card-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text2); font-weight: 600; margin-bottom: 6px;
+  }
+  .card-title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 24px; }
+
+  /* ===== Form ===== */
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+    color: var(--text); margin-bottom: 6px; letter-spacing: -0.2px;
+  }
+  .form-hint { font-size: 12px; color: var(--text2); font-weight: 400; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 15px; font-family: inherit;
+    background: #fafafa; transition: var(--transition); color: var(--text);
+    letter-spacing: -0.2px; -webkit-appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--accent); background: #fff;
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.1);
+  }
+  .form-textarea { resize: vertical; min-height: 70px; }
+  .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .form-row-3 { grid-template-columns: 1fr; } }
+
+  /* Quantity selector */
+  .qty-selector { display: flex; align-items: center; gap: 0; }
+  .qty-btn {
+    width: 40px; height: 40px; border: 1px solid var(--border); background: #fafafa;
+    font-size: 18px; cursor: pointer; transition: var(--transition); color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .qty-btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+  .qty-btn:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .qty-btn:hover { background: #f0f0f0; }
+  .qty-btn:active { background: #e0e0e0; }
+  .qty-input {
+    width: 80px; height: 40px; border: 1px solid var(--border); border-left: none; border-right: none;
+    text-align: center; font-size: 16px; font-weight: 600; font-family: inherit;
+    background: #fff; -moz-appearance: textfield;
+  }
+  .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Radio group */
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-option { position: relative; }
+  .radio-option input { position: absolute; opacity: 0; }
+  .radio-option label {
+    display: block; padding: 10px 18px; border: 1px solid var(--border);
+    border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 500;
+    transition: var(--transition); background: #fafafa; letter-spacing: -0.2px;
+    white-space: nowrap;
+  }
+  .radio-option input:checked + label {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  .radio-option label:hover { border-color: var(--accent); }
+
+  /* Toggle */
+  .toggle-row { display: flex; align-items: center; gap: 10px; }
+  .toggle-switch {
+    width: 48px; height: 28px; border-radius: 14px; background: #d2d2d7;
+    cursor: pointer; position: relative; transition: var(--transition);
+  }
+  .toggle-switch.active { background: var(--accent); }
+  .toggle-switch::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+    border-radius: 50%; background: #fff; transition: var(--transition); box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .toggle-switch.active::after { left: 23px; }
+
+  /* GPS locate button */
+  .btn-locate {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+    border: 1px solid var(--border); background: #fafafa; border-radius: 20px;
+    cursor: pointer; font-size: 12px; font-weight: 500; color: var(--accent);
+    transition: var(--transition); font-family: inherit; margin-bottom: 10px;
+  }
+  .btn-locate:hover { background: #f0f7ff; border-color: var(--accent); }
+  .btn-locate.locating { opacity: 0.6; pointer-events: none; }
+
+  /* Safety check badge */
+  .safety-check {
+    display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+    background: #e8f5e9; border-radius: var(--radius-sm); margin-bottom: 20px;
+    font-size: 13px; font-weight: 500; color: #2e7d32;
+  }
+  .safety-check.warn { background: #fff3e0; color: #e65100; }
+
+  /* Batch vehicle list */
+  .batch-vehicles { margin-top: 8px; }
+  .batch-vehicle-row {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: #fafafa; border-radius: var(--radius-sm); margin-bottom: 8px;
+    border: 1px solid var(--border-light); flex-wrap: wrap;
+  }
+  .batch-vehicle-row .v-index { font-weight: 700; font-size: 14px; color: var(--accent); min-width: 24px; }
+  .batch-vehicle-row input {
+    flex: 1; min-width: 100px; padding: 8px 10px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff;
+  }
+  .batch-vehicle-row input:focus { outline: none; border-color: var(--accent); }
+  .btn-remove-vehicle {
+    width: 30px; height: 30px; border-radius: 50%; border: none; background: #fce4ec;
+    color: var(--red); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  }
+  .btn-add-vehicle {
+    padding: 10px 20px; border: 1px dashed var(--border); background: transparent;
+    border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--accent); transition: var(--transition); font-family: inherit; width: 100%;
+  }
+  .btn-add-vehicle:hover { background: #f0f7ff; border-color: var(--accent); }
+
+  /* ===== Summary Card ===== */
+  .summary-card {
+    background: var(--card); border-radius: var(--radius-lg); overflow: hidden;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+    position: sticky; top: 80px; transition: var(--transition);
+  }
+  .summary-card:hover { box-shadow: var(--shadow-md); }
+  .summary-header { padding: 24px 28px 0; }
+  .summary-body { padding: 20px 28px 24px; }
+  .summary-title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 4px; }
+  .summary-subtitle { font-size: 12px; color: var(--text2); }
+  .summary-divider { border: none; border-top: 1px solid var(--border-light); margin: 16px 0; }
+  .summary-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; letter-spacing: -0.2px; align-items: center; }
+  .summary-row .label { color: var(--text3); }
+  .summary-row .value { font-weight: 500; text-align: right; }
+  .price-breakdown { background: #fafafa; border-radius: var(--radius-sm); padding: 14px 16px; margin: 8px 0; }
+  .price-breakdown .line { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: var(--text3); }
+  .price-breakdown .line .val { font-weight: 500; color: var(--text); }
+  .summary-total { display: flex; justify-content: space-between; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; padding-top: 4px; }
+  .summary-note { font-size: 12px; color: var(--text2); margin-top: 8px; letter-spacing: -0.2px; line-height: 1.5; }
+  .summary-savings {
+    display: inline-block; padding: 3px 8px; background: #e8f5e9; color: #2e7d32;
+    border-radius: 6px; font-size: 12px; font-weight: 600;
+  }
+  .btn-submit {
+    width: 100%; margin-top: 20px; padding: 14px; border: none; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
+    transition: var(--transition); letter-spacing: -0.3px; font-family: inherit;
+  }
+  .btn-submit:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,113,227,0.3); }
+  .btn-submit:active { transform: scale(0.98); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ===== Order Progress Tracker ===== */
+  .progress-tracker { display: flex; align-items: center; gap: 0; padding: 0 8px; margin-bottom: 16px; }
+  .progress-step { flex: 1; text-align: center; position: relative; }
+  .progress-dot {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--border-light);
+    margin: 0 auto 6px; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: #fff; transition: var(--transition); position: relative; z-index: 1;
+  }
+  .progress-step.active .progress-dot { background: var(--accent); }
+  .progress-step.done .progress-dot { background: var(--green); }
+  .progress-line {
+    position: absolute; top: 16px; left: 50%; width: 100%; height: 2px; background: var(--border-light); z-index: 0;
+  }
+  .progress-step:last-child .progress-line { display: none; }
+  .progress-step.done .progress-line { background: var(--green); }
+  .progress-step.active .progress-line { background: var(--accent); }
+  .progress-label { font-size: 11px; color: var(--text2); letter-spacing: -0.1px; }
+  .progress-step.active .progress-label { color: var(--accent); font-weight: 600; }
+  .progress-step.done .progress-label { color: var(--green); }
+
+  /* ===== Orders Table ===== */
+  .order-card {
+    background: var(--card); border-radius: var(--radius); padding: 22px 28px;
+    margin-bottom: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+    transition: var(--transition);
+  }
+  .order-card:hover { box-shadow: var(--shadow-md); }
+  .order-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .order-status {
+    padding: 5px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: -0.1px;
+    white-space: nowrap;
+  }
+  .status-confirmed { background: #e8f5e9; color: #2e7d32; }
+  .status-pending { background: #fff3e0; color: #e65100; }
+  .status-dispatched { background: #e3f2fd; color: #1565c0; }
+  .status-enroute { background: #e3f2fd; color: #0d47a1; }
+  .status-fueling { background: #f3e5f5; color: #7b1fa2; }
+  .status-completed { background: #e8f5e9; color: #1b5e20; }
+  .status-cancelled { background: #fce4ec; color: #c62828; }
+
+  .order-body { display: flex; gap: 20px; flex-wrap: wrap; }
+  .order-detail-col { flex: 1; min-width: 180px; }
+  .order-detail-row { font-size: 13px; margin-bottom: 4px; letter-spacing: -0.1px; }
+  .order-detail-row strong { font-weight: 600; }
+  .order-meta { font-size: 12px; color: var(--text2); }
+  .order-actions { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+  .btn-cancel {
+    padding: 8px 16px; border: 1px solid var(--red); color: var(--red);
+    background: transparent; border-radius: 20px; cursor: pointer; font-size: 13px;
+    font-weight: 500; transition: var(--transition); font-family: inherit;
+  }
+  .btn-cancel:hover { background: #fef2f2; }
+  .btn-rate {
+    padding: 8px 16px; border: 1px solid var(--orange); color: var(--orange);
+    background: transparent; border-radius: 20px; cursor: pointer; font-size: 13px;
+    font-weight: 500; transition: var(--transition); font-family: inherit;
+  }
+  .btn-rate:hover { background: #fff8f0; }
+  .btn-reschedule {
+    padding: 8px 16px; border: 1px solid var(--accent); color: var(--accent);
+    background: transparent; border-radius: 20px; cursor: pointer; font-size: 13px;
+    font-weight: 500; transition: var(--transition); font-family: inherit;
+  }
+  .btn-reschedule:hover { background: #f0f7ff; }
+
+  .empty-orders { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-orders .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-orders p { font-size: 15px; margin-bottom: 4px; }
+
+  /* ===== Star Rating ===== */
+  .star-rating { display: flex; gap: 6px; justify-content: center; margin: 16px 0; font-size: 32px; }
+  .star-rating .star { cursor: pointer; transition: transform 0.15s; color: #d2d2d7; }
+  .star-rating .star.filled { color: #ff9500; }
+  .star-rating .star:hover { transform: scale(1.2); }
+
+  /* ===== Stats Dashboard ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    background: var(--card); border-radius: var(--radius); padding: 22px 24px;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+  }
+  .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
+  .stat-card .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.6px; }
+  .stat-card .stat-label { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  /* ===== Toast ===== */
+  .toast-wrap { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; }
+  .toast-inner {
+    background: #1d1d1f; color: #fff; padding: 12px 24px; border-radius: 24px;
+    font-size: 14px; font-weight: 500; letter-spacing: -0.2px; opacity: 0; transform: translateY(-10px);
+    transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+    text-align: center; max-width: 500px;
+  }
+  .toast-inner.show { opacity: 1; transform: translateY(0); }
+
+  /* ===== Modal ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset:0; z-index: 200;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: var(--radius-xl); padding: 36px;
+    max-width: 460px; width: 92%; text-align: center; box-shadow: var(--shadow-lg);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-icon { font-size: 56px; margin-bottom: 16px; }
+  .modal-box h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .modal-box h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+  .modal-box p { color: var(--text3); margin-bottom: 20px; font-size: 15px; letter-spacing: -0.2px; }
+  .modal-box .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  .btn-outline-dark {
+    padding: 10px 24px; border: 1px solid var(--border); background: #fff;
+    border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 500;
+    transition: var(--transition); font-family: inherit; letter-spacing: -0.2px;
+  }
+  .btn-outline-dark:hover { background: #f5f5f7; }
+  .btn-primary {
+    padding: 10px 24px; border: none; background: var(--accent); color: #fff;
+    border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600;
+    transition: var(--transition); font-family: inherit; letter-spacing: -0.2px;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  /* ===== Policy Tooltip ===== */
+  .policy-link { color: var(--accent); cursor: pointer; text-decoration: underline; font-weight: 500; font-size: 13px; }
+  .policy-box {
+    background: #fafafa; border-radius: var(--radius-sm); padding: 14px 16px;
+    margin-top: 12px; font-size: 13px; color: var(--text3); line-height: 1.6; display: none;
+  }
+  .policy-box.show { display: block; }
+
+  /* ===== Service Cards ===== */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align: center; padding: 40px 24px; color: var(--text2); font-size: 12px;
+    border-top: 1px solid var(--border-light); margin-top: 40px;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .hero h1 { font-size: 36px; letter-spacing: -0.8px; }
+    .hero p { font-size: 16px; }
+    .hero-stats { gap: 24px; }
+    .hero-stat .num { font-size: 24px; }
+    .nav-links { display: none; }
+    .section { padding: 0 16px 60px; }
+    .section-title { font-size: 24px; }
+    .tabs { width: 100%; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">氢捷运<span>·</span>H₂</a>
+    <ul class="nav-links">
+      <li><a href="#book">预约加氢</a></li>
+      <li><a href="#orders">我的订单</a></li>
+      <li><a href="#dashboard">车队看板<span class="nav-badge">NEW</span></a></li>
+      <li><a href="#info">服务说明</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('book').scrollIntoView({behavior:'smooth'})">立即预约</button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">鄂尔多斯 · 移动加氢服务</div>
+  <h1>不用绕路找站。<br>氢，<span>送到你车前</span>。</h1>
+  <p>鄂尔多斯首个移动加氢服务平台。为氢能重卡车队提供上门加注，单车加满仅需15分钟，省去往返加氢站的时间和成本。</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">300+</div><div class="label">服务车辆</div></div>
+    <div class="hero-stat"><div class="num">38<span style="font-size:18px;">元/kg</span></div><div class="label">标准服务价</div></div>
+    <div class="hero-stat"><div class="num">15<span style="font-size:18px;">min</span></div><div class="label">单车加注时间</div></div>
+    <div class="hero-stat"><div class="num">4.9<span style="font-size:18px;">分</span></div><div class="label">用户好评</div></div>
+  </div>
+</section>
+
+<!-- Booking Section -->
+<section class="section" id="book">
+  <h2 class="section-title">预约加氢服务</h2>
+  <p class="section-sub">选择时间、地点和加氢量，提交后我们将确认您的预约。</p>
+
+  <!-- Booking Mode Tabs -->
+  <div class="tabs" id="bookingTabs">
+    <button class="tab-btn active" onclick="switchTab('single')">📋 单次预约</button>
+    <button class="tab-btn" onclick="switchTab('batch')">🚛 批量预约</button>
+    <button class="tab-btn" onclick="switchTab('recurring')">🔄 周期预约</button>
+  </div>
+
+  <div class="booking-layout">
+
+    <!-- ============ FORM AREA ============ -->
+    <div>
+
+      <!-- === SINGLE BOOKING TAB === -->
+      <div class="tab-panel active" id="panel-single">
+        <div class="card">
+          <div class="card-label">服务预约</div>
+          <div class="card-title">填写订单信息</div>
+
+          <!-- Safety check -->
+          <div class="safety-check" id="safetyCheck">
+            ✅ 车辆资质预检通过 — 年检有效期至 <strong>2026-12-15</strong> · 储氢瓶检验合格
+          </div>
+
+          <!-- Company & Contact -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">公司/车队名称</label>
+              <input class="form-input" id="companyName" placeholder="如：鄂尔多斯XX物流公司">
+            </div>
+            <div class="form-group">
+              <label class="form-label">联系人</label>
+              <input class="form-input" id="contactName" placeholder="姓名">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">联系电话</label>
+              <input class="form-input" id="contactPhone" placeholder="手机号" type="tel">
+            </div>
+            <div class="form-group">
+              <label class="form-label">通知方式</label>
+              <select class="form-select" id="notifyMethod">
+                <option value="phone">📞 电话通知</option>
+                <option value="sms">💬 短信通知</option>
+                <option value="both">📞+💬 电话+短信</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Vehicle type -->
+          <div class="form-group">
+            <label class="form-label">车辆类型</label>
+            <div class="radio-group" id="vehicleType">
+              <div class="radio-option"><input type="radio" name="vehicle" value="heavy" id="vh" checked><label for="vh">🚛 氢能重卡 (49吨)</label></div>
+              <div class="radio-option"><input type="radio" name="vehicle" value="bus" id="vb"><label for="vb">🚌 氢能公交</label></div>
+              <div class="radio-option"><input type="radio" name="vehicle" value="other" id="vo"><label for="vo">🔧 其他车型</label></div>
+            </div>
+          </div>
+
+          <!-- H2 quantity -->
+          <div class="form-group">
+            <label class="form-label">加氢量 <span class="form-hint">(每车约30kg，最低10kg起)</span></label>
+            <div class="qty-selector">
+              <button class="qty-btn" onclick="changeQty(-10)">−</button>
+              <input class="qty-input" id="hydrogenKg" type="number" value="120" min="10" max="390" step="10" onchange="updateSummary()" oninput="updateSummary()">
+              <button class="qty-btn" onclick="changeQty(10)">+</button>
+              <span style="margin-left:12px;font-size:14px;font-weight:500;color:var(--text3);">公斤 (kg)</span>
+            </div>
+          </div>
+
+          <!-- Location with GPS -->
+          <div class="form-group">
+            <label class="form-label">服务区域</label>
+            <button class="btn-locate" onclick="locateGPS()" id="btnLocate">
+              📍 自动定位当前位置
+            </button>
+            <select class="form-select" id="location" onchange="updateSummary()">
+              <option value="">选择服务区域...</option>
+              <optgroup label="伊金霍洛旗（核心服务区）">
+                <option value="蒙苏经济开发区">蒙苏经济开发区</option>
+                <option value="乌兰木伦镇">乌兰木伦镇 · 呼和乌素工业园</option>
+                <option value="阿勒腾席热镇">阿勒腾席热镇</option>
+              </optgroup>
+              <optgroup label="达拉特旗">
+                <option value="达拉特旗兴旺煤矿">兴旺煤矿片区</option>
+                <option value="达拉特旗亿利园区">亿利化学工业园</option>
+              </optgroup>
+              <optgroup label="准格尔旗（扩展服务区）">
+                <option value="准格尔旗大路工业园">大路工业园区 (+5元/kg远程费)</option>
+                <option value="准格尔旗薛家湾">薛家湾镇 (+5元/kg远程费)</option>
+              </optgroup>
+              <optgroup label="棋盘井">
+                <option value="棋盘井工业园">棋盘井工业园区</option>
+              </optgroup>
+              <optgroup label="其他">
+                <option value="other">其他区域（需电话确认）</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">详细地址</label>
+            <input class="form-input" id="address" placeholder="煤矿/停车场/物流园的具体位置">
+          </div>
+
+          <!-- Date & Time -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">服务日期</label>
+              <input class="form-input" type="date" id="serviceDate" onchange="updateSummary()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">期望时间段</label>
+              <select class="form-select" id="serviceTime" onchange="updateSummary()">
+                <option value="">选择时间段</option>
+                <option value="07:00-10:00">🌅 早班 07:00 – 10:00</option>
+                <option value="10:00-13:00">☀️ 上午 10:00 – 13:00</option>
+                <option value="13:00-16:00">🌤 下午 13:00 – 16:00</option>
+                <option value="16:00-19:00">🌇 晚班 16:00 – 19:00</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Fleet size -->
+          <div class="form-group">
+            <label class="form-label">车队规模 <span class="form-hint">(需要加注的车辆数量)</span></label>
+            <div class="qty-selector">
+              <button class="qty-btn" onclick="changeVehicles(-1)">−</button>
+              <input class="qty-input" id="vehicleCount" type="number" value="4" min="1" max="13" onchange="updateSummary()">
+              <button class="qty-btn" onclick="changeVehicles(1)">+</button>
+              <span style="margin-left:12px;font-size:14px;font-weight:500;color:var(--text3);">辆</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">备注</label>
+            <textarea class="form-textarea" id="notes" placeholder="如有特殊要求请在此说明，如：车辆停放在B区3号停车场..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- === BATCH BOOKING TAB === -->
+      <div class="tab-panel" id="panel-batch">
+        <div class="card">
+          <div class="card-label">批量预约</div>
+          <div class="card-title">一次预约多辆车</div>
+
+          <div class="safety-check">
+            ✅ 车队资质预检通过 — 所有车辆年检及储氢瓶检验均在有效期内
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">公司/车队名称</label>
+              <input class="form-input" id="batchCompany" placeholder="如：鄂尔多斯XX物流公司">
+            </div>
+            <div class="form-group">
+              <label class="form-label">联系人</label>
+              <input class="form-input" id="batchContact" placeholder="姓名">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">联系电话</label>
+              <input class="form-input" id="batchPhone" placeholder="手机号">
+            </div>
+            <div class="form-group">
+              <label class="form-label">服务区域</label>
+              <select class="form-select" id="batchLocation">
+                <option value="">选择区域...</option>
+                <option value="蒙苏经济开发区">蒙苏经济开发区</option>
+                <option value="乌兰木伦镇">乌兰木伦镇</option>
+                <option value="棋盘井工业园">棋盘井工业园区</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">服务日期</label>
+              <input class="form-input" type="date" id="batchDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">期望时间段</label>
+              <select class="form-select" id="batchTime">
+                <option value="">选择时间段</option>
+                <option value="07:00-10:00">🌅 早班 07:00 – 10:00</option>
+                <option value="10:00-13:00">☀️ 上午 10:00 – 13:00</option>
+                <option value="13:00-16:00">🌤 下午 13:00 – 16:00</option>
+                <option value="16:00-19:00">🌇 晚班 16:00 – 19:00</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">车辆列表</label>
+            <div class="batch-vehicles" id="batchVehicleList">
+              <div class="batch-vehicle-row">
+                <span class="v-index">#1</span>
+                <input placeholder="车牌号（如：蒙K·12345）" class="plate-input">
+                <input placeholder="车型" value="氢能重卡(49吨)" style="max-width:160px;">
+                <input placeholder="需氢量(kg)" type="number" value="30" min="10" style="max-width:100px;" class="kg-input">
+                <button class="btn-remove-vehicle" onclick="removeBatchVehicle(this)" title="移除">✕</button>
+              </div>
+            </div>
+            <button class="btn-add-vehicle" onclick="addBatchVehicle()">+ 添加车辆</button>
+          </div>
+
+          <div style="text-align:right;margin-top:16px;">
+            <span style="font-size:14px;color:var(--text3);">预计总加氢量：<strong id="batchTotalKg" style="color:var(--text);">30 kg</strong> · 预估费用：<strong id="batchTotalPrice" style="color:var(--text);">¥1,140</strong></span>
+            <button class="btn-submit" style="margin-top:12px;" onclick="submitBatchOrder()">提交批量预约</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- === RECURRING BOOKING TAB === -->
+      <div class="tab-panel" id="panel-recurring">
+        <div class="card">
+          <div class="card-label">周期预约</div>
+          <div class="card-title">长期固定加氢计划</div>
+
+          <div class="safety-check">
+            ✅ 长期合作客户 — 享受周期预约专属优惠（<strong>36元/kg</strong>，较标准价省2元/kg）
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">公司/车队名称</label>
+              <input class="form-input" id="recurCompany" placeholder="如：鄂尔多斯XX物流公司">
+            </div>
+            <div class="form-group">
+              <label class="form-label">联系人</label>
+              <input class="form-input" id="recurContact" placeholder="姓名">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">联系电话</label>
+              <input class="form-input" id="recurPhone" placeholder="手机号">
+            </div>
+            <div class="form-group">
+              <label class="form-label">服务区域</label>
+              <select class="form-select" id="recurLocation">
+                <option value="">选择区域...</option>
+                <option value="蒙苏经济开发区">蒙苏经济开发区</option>
+                <option value="乌兰木伦镇">乌兰木伦镇</option>
+                <option value="棋盘井工业园">棋盘井工业园区</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">加氢频次</label>
+            <div class="radio-group">
+              <div class="radio-option"><input type="radio" name="recurFreq" value="daily" id="rf1"><label for="rf1">每日</label></div>
+              <div class="radio-option"><input type="radio" name="recurFreq" value="weekly" id="rf2" checked><label for="rf2">每周</label></div>
+              <div class="radio-option"><input type="radio" name="recurFreq" value="biweekly" id="rf3"><label for="rf3">每两周</label></div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">每周服务日</label>
+              <div class="radio-group" style="margin-top:4px;">
+                <div class="radio-option"><input type="radio" name="recurDay" value="mon" id="rd1" checked><label for="rd1">周一</label></div>
+                <div class="radio-option"><input type="radio" name="recurDay" value="tue" id="rd2"><label for="rd2">周二</label></div>
+                <div class="radio-option"><input type="radio" name="recurDay" value="wed" id="rd3"><label for="rd3">周三</label></div>
+                <div class="radio-option"><input type="radio" name="recurDay" value="thu" id="rd4"><label for="rd4">周四</label></div>
+                <div class="radio-option"><input type="radio" name="recurDay" value="fri" id="rd5"><label for="rd5">周五</label></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">时间段</label>
+              <select class="form-select" id="recurTime">
+                <option value="07:00-10:00">🌅 早班 07:00 – 10:00</option>
+                <option value="10:00-13:00">☀️ 上午 10:00 – 13:00</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">每次加氢量 (kg)</label>
+              <input class="form-input" type="number" id="recurKg" value="120" min="30">
+            </div>
+            <div class="form-group">
+              <label class="form-label">每次服务车辆数</label>
+              <input class="form-input" type="number" id="recurVehicles" value="4" min="1">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">计划开始日期</label>
+            <input class="form-input" type="date" id="recurStartDate">
+          </div>
+
+          <div style="background:#fafafa;border-radius:var(--radius-sm);padding:16px;margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;font-size:14px;">
+              <span>周期预约优惠价</span><strong>36 元/kg（标准价38元/kg）</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-top:4px;">
+              <span>预估月消费</span><strong id="recurMonthly">¥17,280</strong>
+            </div>
+          </div>
+
+          <button class="btn-submit" style="margin-top:16px;" onclick="submitRecurringOrder()">提交周期预约申请</button>
+          <div class="summary-note" style="text-align:center;margin-top:12px;">
+            周期预约需经电话确认后生效，可随时调整或取消
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SUMMARY SIDEBAR ============ -->
+    <div>
+      <div class="summary-card" id="summaryCard">
+        <div class="summary-header">
+          <div class="summary-title">订单摘要</div>
+          <div class="summary-subtitle">实时计算费用</div>
+        </div>
+        <div class="summary-body">
+          <div class="summary-row"><span class="label">预约模式</span><span class="value" id="sumMode">单次预约</span></div>
+          <div class="summary-row"><span class="label">加氢量</span><span class="value" id="sumKg">120 kg</span></div>
+          <div class="summary-row"><span class="label">车队规模</span><span class="value" id="sumVehicles">4 辆</span></div>
+          <hr class="summary-divider">
+          <div class="price-breakdown">
+            <div class="line"><span>基准价 (38元/kg × 120kg)</span><span class="val" id="bpBase">¥4,560</span></div>
+            <div class="line" id="bpRemoteLine" style="display:none;"><span>远程服务费 (+5元/kg)</span><span class="val" style="color:var(--orange);" id="bpRemote">¥0</span></div>
+            <div class="line" id="bpDiscountLine" style="display:none;"><span>周期优惠 (-2元/kg)</span><span class="val" style="color:var(--green);" id="bpDiscount">¥0</span></div>
+          </div>
+          <div class="summary-row"><span class="label">服务区域</span><span class="value" id="sumLocation">—</span></div>
+          <div class="summary-row"><span class="label">预计到达</span><span class="value" id="sumTime">—</span></div>
+          <hr class="summary-divider">
+          <div class="summary-total"><span>预计费用</span><span id="sumTotal">¥4,560</span></div>
+          <div class="summary-note" id="sumNote"></div>
+          <div class="summary-note" id="sumSavings"></div>
+          <button class="btn-submit" onclick="submitOrder()">确认预约</button>
+          <div class="summary-note" style="margin-top:12px;text-align:center;">
+            预约提交后我们将在<strong>30分钟内</strong>电话确认
+          </div>
+          <div class="summary-note" style="text-align:center;cursor:pointer;" onclick="togglePolicy()">
+            <span class="policy-link">查看取消与改签政策</span>
+          </div>
+          <div class="policy-box" id="policyBox">
+            <strong>取消政策：</strong>服务开始前4小时可免费取消；4小时内取消收取20%服务费。<br>
+            <strong>改签政策：</strong>服务开始前2小时可免费改签一次；超时改签收取10%服务费。<br>
+            <strong>爽约处理：</strong>累计爽约3次将暂停预约权限7天。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Orders Section -->
+<section class="section" id="orders">
+  <h2 class="section-title">我的订单</h2>
+  <p class="section-sub">管理您的加氢服务预约，追踪订单状态</p>
+
+  <!-- Filter tabs -->
+  <div class="tabs" style="margin-bottom:20px;" id="orderFilters">
+    <button class="tab-btn active" data-filter="all" onclick="filterOrders('all', this)">全部</button>
+    <button class="tab-btn" data-filter="active" onclick="filterOrders('active', this)">进行中</button>
+    <button class="tab-btn" data-filter="completed" onclick="filterOrders('completed', this)">已完成</button>
+    <button class="tab-btn" data-filter="cancelled" onclick="filterOrders('cancelled', this)">已取消</button>
+  </div>
+
+  <div id="ordersList"></div>
+</section>
+
+<!-- Dashboard Section -->
+<section class="section" id="dashboard">
+  <h2 class="section-title">车队看板</h2>
+  <p class="section-sub">消费统计与服务概览</p>
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-value" id="statTotalOrders">0</div>
+      <div class="stat-label">累计订单数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-value" id="statTotalKg">0 kg</div>
+      <div class="stat-label">累计加氢量</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value" id="statTotalSpent">¥0</div>
+      <div class="stat-label">累计消费</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-value" id="statAvgRating">—</div>
+      <div class="stat-label">平均评分</div>
+    </div>
+  </div>
+</section>
+
+<!-- Service Info -->
+<section class="section" id="info" style="padding-bottom:40px;">
+  <h2 class="section-title">服务说明</h2>
+  <p class="section-sub">了解我们的服务范围、定价规则与安全保障</p>
+  <div class="info-grid">
+    <div class="card">
+      <div style="font-size:32px;margin-bottom:12px;">📍</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">标准服务区</h3>
+      <p style="color:var(--text3);font-size:14px;">伊金霍洛旗、达拉特旗、棋盘井为核心服务区（50km内），标准价<strong>38元/kg</strong>。准格尔旗等区域为扩展服务区，加收远程费5元/kg。</p>
+    </div>
+    <div class="card">
+      <div style="font-size:32px;margin-bottom:12px;">⏱️</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">服务时间</h3>
+      <p style="color:var(--text3);font-size:14px;">每日 07:00 – 19:00，全年无休。单次服务2-3小时内完成。请至少提前<strong>4小时</strong>预约，急单请电话联系。</p>
+    </div>
+    <div class="card">
+      <div style="font-size:32px;margin-bottom:12px;">🛡️</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">安全保障</h3>
+      <p style="color:var(--text3);font-size:14px;">持证危化品运输资质，专业安全员全程操作，500万运输险。操作全程符合JT/T 1568-2025标准，每车次安全记录可追溯。</p>
+    </div>
+    <div class="card">
+      <div style="font-size:32px;margin-bottom:12px;">💳</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">结算方式</h3>
+      <p style="color:var(--text3);font-size:14px;">支持<strong>月结</strong>（长期合作客户）、<strong>次结</strong>（单次服务后付款）。周期客户可签"照付不议"保底协议，锁定36元/kg优惠价。</p>
+    </div>
+    <div class="card">
+      <div style="font-size:32px;margin-bottom:12px;">📋</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">资质要求</h3>
+      <p style="color:var(--text3);font-size:14px;">预约前请确保车辆<strong>年检有效</strong>、<strong>储氢瓶检验合格</strong>。首次服务需提供车辆行驶证和加氢口规格信息，我们将在系统中建档。</p>
+    </div>
+    <div class="card">
+      <div style="font-size:32px;margin-bottom:12px;">🔄</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">周期服务</h3>
+      <p style="color:var(--text3);font-size:14px;">车队长期客户可选择周期预约：每日/每周定时上门，享受<strong>36元/kg优惠价</strong>（省5%），优先排期，专属客服对接。</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  氢捷运 H₂ Express · 鄂尔多斯移动加氢服务 · 危化品运输许可编号：待申请<br>
+  本网站为商业计划演示，实际运营以取得相关资质为前提
+</footer>
+
+<!-- Toast -->
+<div class="toast-wrap"><div class="toast-inner" id="toast"></div></div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal-box">
+    <div class="modal-icon">✅</div>
+    <h2>预约已提交</h2>
+    <p id="successMsg"></p>
+    <div class="btn-row">
+      <button class="btn-outline-dark" onclick="closeModal()">关闭</button>
+      <button class="btn-primary" onclick="closeModal();document.getElementById('orders').scrollIntoView({behavior:'smooth'})">查看订单</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rating Modal -->
+<div class="modal-overlay" id="ratingModal">
+  <div class="modal-box">
+    <h3>服务评价</h3>
+    <p id="ratingOrderId" style="font-size:13px;color:var(--text2);"></p>
+    <div class="star-rating" id="starRating">
+      <span class="star" data-rating="1" onclick="setRating(1)">★</span>
+      <span class="star" data-rating="2" onclick="setRating(2)">★</span>
+      <span class="star" data-rating="3" onclick="setRating(3)">★</span>
+      <span class="star" data-rating="4" onclick="setRating(4)">★</span>
+      <span class="star" data-rating="5" onclick="setRating(5)">★</span>
+    </div>
+    <textarea class="form-textarea" id="ratingComment" placeholder="分享您的服务体验..." style="margin-bottom:16px;"></textarea>
+    <div class="btn-row">
+      <button class="btn-outline-dark" onclick="closeRatingModal()">跳过</button>
+      <button class="btn-primary" onclick="submitRating()">提交评价</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== State ==========
+let currentTab = 'single';
+let currentRatingOrderId = null;
+let currentRating = 0;
+let orderFilter = 'all';
+
+// ========== Pricing Engine ==========
+const PRICING = {
+  basePrice: 38,
+  remoteSurcharge: 5,
+  recurringDiscount: 2,
+  coreZones: ['蒙苏经济开发区','乌兰木伦镇','阿勒腾席热镇','达拉特旗兴旺煤矿','达拉特旗亿利园区','棋盘井工业园'],
+  remoteZones: ['准格尔旗大路工业园','准格尔旗薛家湾'],
+  minOrder: 30,
+  maxPerTrip: 390,
+  kgPerVehicle: 30,
+};
+
+function calcPrice(kg, location) {
+  let pricePerKg = PRICING.basePrice;
+  let note = '';
+  let isRemote = false;
+
+  if (PRICING.remoteZones.includes(location)) {
+    pricePerKg += PRICING.remoteSurcharge;
+    note = '含远程服务费 +5元/kg';
+    isRemote = true;
+  } else if (location === 'other') {
+    pricePerKg += 10;
+    note = '其他区域需电话确认最终价格';
+    isRemote = true;
+  }
+
+  const total = kg * pricePerKg;
+  return { pricePerKg, total, note, isRemote };
+}
+
+function calcBatchTotal() {
+  const inputs = document.querySelectorAll('#batchVehicleList .kg-input');
+  let total = 0;
+  inputs.forEach(inp => { total += parseInt(inp.value) || 0; });
+  document.getElementById('batchTotalKg').textContent = total + ' kg';
+  document.getElementById('batchTotalPrice').textContent = '¥' + (total * PRICING.basePrice).toLocaleString();
+}
+
+// ========== Tab Switching ==========
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('#bookingTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+
+  // Highlight correct tab button
+  const buttons = document.querySelectorAll('#bookingTabs .tab-btn');
+  const idx = { single: 0, batch: 1, recurring: 2 }[tab];
+  if (buttons[idx]) buttons[idx].classList.add('active');
+
+  updateSummary();
+}
+
+// ========== Summary Updates ==========
+function updateSummary() {
+  const kg = parseInt(document.getElementById('hydrogenKg').value) || 0;
+  const vCount = parseInt(document.getElementById('vehicleCount').value) || 0;
+  const location = document.getElementById('location').value;
+  const locText = location ? (document.getElementById('location').selectedOptions[0]?.text || location) : '—';
+  const timeSlot = document.getElementById('serviceTime').value;
+  const dateVal = document.getElementById('serviceDate').value;
+  const timeText = dateVal && timeSlot ? `${dateVal} ${timeSlot}` : '—';
+
+  const { pricePerKg, total, note, isRemote } = calcPrice(kg, location);
+
+  document.getElementById('sumMode').textContent = { single: '单次预约', batch: '批量预约', recurring: '周期预约' }[currentTab];
+  document.getElementById('sumKg').textContent = kg + ' kg';
+  document.getElementById('sumVehicles').textContent = vCount + ' 辆';
+  document.getElementById('sumLocation').textContent = locText;
+  document.getElementById('sumTime').textContent = timeText;
+  document.getElementById('sumTotal').textContent = '¥' + total.toLocaleString();
+  document.getElementById('sumNote').textContent = note;
+
+  // Price breakdown
+  document.getElementById('bpBase').textContent = '¥' + (PRICING.basePrice * kg).toLocaleString();
+  const remoteLine = document.getElementById('bpRemoteLine');
+  if (isRemote) {
+    remoteLine.style.display = 'flex';
+    document.getElementById('bpRemote').textContent = '+¥' + (PRICING.remoteSurcharge * kg).toLocaleString();
+  } else {
+    remoteLine.style.display = 'none';
+  }
+  document.getElementById('bpDiscountLine').style.display = 'none';
+  document.getElementById('sumSavings').textContent = '';
+
+  // Savings hint
+  if (kg >= 200) {
+    document.getElementById('sumSavings').innerHTML = '<span class="summary-savings">大单优惠：可联系客服申请批量折扣</span>';
+  }
+}
+
+function changeQty(delta) {
+  const el = document.getElementById('hydrogenKg');
+  const newVal = (parseInt(el.value) || 0) + delta;
+  if (newVal >= 10 && newVal <= PRICING.maxPerTrip) {
+    el.value = newVal;
+    updateSummary();
+  }
+}
+
+function changeVehicles(delta) {
+  const el = document.getElementById('vehicleCount');
+  const newVal = (parseInt(el.value) || 1) + delta;
+  if (newVal >= 1 && newVal <= 13) {
+    el.value = newVal;
+    const kgEl = document.getElementById('hydrogenKg');
+    kgEl.value = newVal * PRICING.kgPerVehicle;
+    updateSummary();
+  }
+}
+
+// ========== GPS Location ==========
+function locateGPS() {
+  const btn = document.getElementById('btnLocate');
+  if (!navigator.geolocation) {
+    showToast('您的浏览器不支持GPS定位，请手动选择服务区域');
+    return;
+  }
+  btn.classList.add('locating');
+  btn.textContent = '⏳ 正在定位...';
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      btn.classList.remove('locating');
+      btn.textContent = '📍 已定位 (' + pos.coords.latitude.toFixed(2) + ', ' + pos.coords.longitude.toFixed(2) + ')';
+
+      // Simple proximity: if lat > 39.5 suggest 伊金霍洛旗, else 棋盘井 etc.
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      let suggestZone = '';
+      if (lat > 39.2 && lat < 39.8 && lng > 109.5 && lng < 110.5) suggestZone = '蒙苏经济开发区';
+      else if (lat > 39.7 && lat < 40.3) suggestZone = '达拉特旗兴旺煤矿';
+      else if (lat > 39.0 && lat < 39.8 && lng > 106.8 && lng < 107.8) suggestZone = '棋盘井工业园';
+
+      if (suggestZone) {
+        document.getElementById('location').value = suggestZone;
+        updateSummary();
+        showToast('已自动选择最近服务区：' + suggestZone);
+      } else {
+        showToast('定位成功，请手动选择服务区域');
+      }
+    },
+    () => {
+      btn.classList.remove('locating');
+      btn.textContent = '📍 定位失败，点此重试';
+      showToast('定位失败，请手动选择服务区域');
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+// ========== Policy Toggle ==========
+function togglePolicy() {
+  document.getElementById('policyBox').classList.toggle('show');
+}
+
+// ========== Batch Vehicle Management ==========
+function addBatchVehicle() {
+  const list = document.getElementById('batchVehicleList');
+  const count = list.querySelectorAll('.batch-vehicle-row').length + 1;
+  const row = document.createElement('div');
+  row.className = 'batch-vehicle-row';
+  row.innerHTML = `
+    <span class="v-index">#${count}</span>
+    <input placeholder="车牌号（如：蒙K·12345）" class="plate-input">
+    <input placeholder="车型" value="氢能重卡(49吨)" style="max-width:160px;">
+    <input placeholder="需氢量(kg)" type="number" value="30" min="10" style="max-width:100px;" class="kg-input" onchange="calcBatchTotal()" oninput="calcBatchTotal()">
+    <button class="btn-remove-vehicle" onclick="removeBatchVehicle(this)" title="移除">✕</button>
+  `;
+  list.appendChild(row);
+  updateBatchIndices();
+  calcBatchTotal();
+}
+
+function removeBatchVehicle(btn) {
+  const list = document.getElementById('batchVehicleList');
+  if (list.querySelectorAll('.batch-vehicle-row').length <= 1) {
+    showToast('至少保留一辆车');
+    return;
+  }
+  btn.closest('.batch-vehicle-row').remove();
+  updateBatchIndices();
+  calcBatchTotal();
+}
+
+function updateBatchIndices() {
+  document.querySelectorAll('#batchVehicleList .batch-vehicle-row').forEach((row, i) => {
+    row.querySelector('.v-index').textContent = '#' + (i + 1);
+  });
+}
+
+// ========== Orders Management ==========
+const ORDERS_KEY = 'h2_express_orders_v2';
+
+function loadOrders() {
+  try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveOrders(orders) {
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+}
+
+function generateId() {
+  return 'H2-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 5).toUpperCase();
+}
+
+function submitOrder() {
+  const company = document.getElementById('companyName').value.trim();
+  const name = document.getElementById('contactName').value.trim();
+  const phone = document.getElementById('contactPhone').value.trim();
+  const location = document.getElementById('location').value;
+  const address = document.getElementById('address').value.trim();
+  const dateVal = document.getElementById('serviceDate').value;
+  const timeSlot = document.getElementById('serviceTime').value;
+  const kg = parseInt(document.getElementById('hydrogenKg').value) || 0;
+  const vCount = parseInt(document.getElementById('vehicleCount').value) || 0;
+  const vehicleType = document.querySelector('input[name="vehicle"]:checked')?.value || 'heavy';
+  const notifyMethod = document.getElementById('notifyMethod').value;
+  const notes = document.getElementById('notes').value.trim();
+
+  if (!name || !phone) { showToast('请填写联系人和电话'); return; }
+  if (!location) { showToast('请选择服务区域'); return; }
+  if (!dateVal) { showToast('请选择服务日期'); return; }
+  if (!timeSlot) { showToast('请选择时间段'); return; }
+  if (kg < PRICING.minOrder) { showToast(`最低起订量 ${PRICING.minOrder} kg`); return; }
+
+  const { pricePerKg, total } = calcPrice(kg, location);
+  const vehicleLabels = { heavy:'氢能重卡(49吨)', bus:'氢能公交', other:'其他车型' };
+
+  const order = {
+    id: generateId(),
+    type: 'single',
+    company, name, phone, notifyMethod,
+    location, address, date: dateVal, timeSlot, kg, vCount,
+    vehicleType, vehicleLabel: vehicleLabels[vehicleType] || vehicleType,
+    pricePerKg, total, notes,
+    status: 'confirmed',
+    progress: 1, // 0=pending, 1=confirmed, 2=dispatched, 3=enroute, 4=fueling, 5=completed
+    rating: null,
+    ratingComment: '',
+    createdAt: new Date().toISOString()
+  };
+
+  const orders = loadOrders();
+  orders.unshift(order);
+  saveOrders(orders);
+
+  document.getElementById('successMsg').innerHTML =
+    `<strong>订单号 ${order.id}</strong><br>${order.kg}kg 氢气 · ${order.vCount}辆车<br>预计 ¥${order.total.toLocaleString()}<br><br>我们将在30分钟内电话确认。`;
+
+  document.getElementById('successModal').classList.add('show');
+  renderOrders();
+  renderDashboard();
+  resetForm();
+}
+
+function submitBatchOrder() {
+  const company = document.getElementById('batchCompany').value.trim();
+  const name = document.getElementById('batchContact').value.trim();
+  const phone = document.getElementById('batchPhone').value.trim();
+  const location = document.getElementById('batchLocation').value;
+  const dateVal = document.getElementById('batchDate').value;
+  const timeSlot = document.getElementById('batchTime').value;
+
+  if (!name || !phone) { showToast('请填写联系人和电话'); return; }
+  if (!location) { showToast('请选择服务区域'); return; }
+  if (!dateVal) { showToast('请选择服务日期'); return; }
+  if (!timeSlot) { showToast('请选择时间段'); return; }
+
+  const vehicles = [];
+  document.querySelectorAll('#batchVehicleList .batch-vehicle-row').forEach(row => {
+    const plate = row.querySelector('.plate-input')?.value.trim() || '';
+    const model = row.querySelectorAll('input')[1]?.value.trim() || '氢能重卡(49吨)';
+    const kg = parseInt(row.querySelector('.kg-input')?.value) || 0;
+    vehicles.push({ plate, model, kg });
+  });
+
+  const totalKg = vehicles.reduce((s, v) => s + v.kg, 0);
+  const { total } = calcPrice(totalKg, location);
+
+  const order = {
+    id: generateId(),
+    type: 'batch',
+    company, name, phone,
+    location, date: dateVal, timeSlot,
+    vehicles, kg: totalKg, vCount: vehicles.length,
+    pricePerKg: PRICING.basePrice, total,
+    status: 'confirmed',
+    progress: 1,
+    rating: null,
+    ratingComment: '',
+    createdAt: new Date().toISOString()
+  };
+
+  const orders = loadOrders();
+  orders.unshift(order);
+  saveOrders(orders);
+
+  document.getElementById('successMsg').innerHTML =
+    `<strong>批量预约 ${order.id}</strong><br>${vehicles.length}辆车 · 共${totalKg}kg<br>预计 ¥${total.toLocaleString()}<br><br>我们将在30分钟内电话确认。`;
+
+  document.getElementById('successModal').classList.add('show');
+  renderOrders();
+  renderDashboard();
+}
+
+function submitRecurringOrder() {
+  const company = document.getElementById('recurCompany').value.trim();
+  const name = document.getElementById('recurContact').value.trim();
+  const phone = document.getElementById('recurPhone').value.trim();
+  const location = document.getElementById('recurLocation').value;
+  const freq = document.querySelector('input[name="recurFreq"]:checked')?.value || 'weekly';
+  const day = document.querySelector('input[name="recurDay"]:checked')?.value || 'mon';
+  const timeSlot = document.getElementById('recurTime').value;
+  const kg = parseInt(document.getElementById('recurKg').value) || 0;
+  const vehicles = parseInt(document.getElementById('recurVehicles').value) || 0;
+  const startDate = document.getElementById('recurStartDate').value;
+
+  if (!company || !name || !phone) { showToast('请填写完整的公司和联系人信息'); return; }
+  if (!location) { showToast('请选择服务区域'); return; }
+  if (!startDate) { showToast('请选择计划开始日期'); return; }
+
+  const dayLabels = { mon:'周一', tue:'周二', wed:'周三', thu:'周四', fri:'周五', sat:'周六', sun:'周日' };
+  const freqLabels = { daily:'每日', weekly:'每周', biweekly:'每两周' };
+
+  const order = {
+    id: generateId(),
+    type: 'recurring',
+    company, name, phone,
+    location, freq, freqLabel: freqLabels[freq],
+    day, dayLabel: dayLabels[day],
+    timeSlot, kg, vCount: vehicles,
+    startDate,
+    pricePerKg: PRICING.basePrice - PRICING.recurringDiscount,
+    total: kg * (PRICING.basePrice - PRICING.recurringDiscount),
+    status: 'pending',
+    progress: 0,
+    rating: null,
+    ratingComment: '',
+    createdAt: new Date().toISOString()
+  };
+
+  const orders = loadOrders();
+  orders.unshift(order);
+  saveOrders(orders);
+
+  document.getElementById('successMsg').innerHTML =
+    `<strong>周期预约申请 ${order.id}</strong><br>${freqLabels[freq]} · ${dayLabels[day]} · ${timeSlot}<br>每次 ${kg}kg / ${vehicles}辆车<br>优惠价 ${PRICING.basePrice - PRICING.recurringDiscount}元/kg<br><br>我们将在30分钟内电话确认并激活计划。`;
+
+  document.getElementById('successModal').classList.add('show');
+  renderOrders();
+  renderDashboard();
+}
+
+function cancelOrder(id) {
+  if (!confirm('确定要取消此订单吗？\n\n服务开始前4小时可免费取消；4小时内取消收取20%服务费。')) return;
+  const orders = loadOrders();
+  const idx = orders.findIndex(o => o.id === id);
+  if (idx >= 0) {
+    orders[idx].status = 'cancelled';
+    orders[idx].progress = -1;
+    saveOrders(orders);
+    renderOrders();
+    renderDashboard();
+    showToast('订单已取消');
+  }
+}
+
+function rescheduleOrder(id) {
+  showToast('改签功能：请致电客服 400-XXX-XXXX 修改服务时间');
+}
+
+function openRating(id) {
+  currentRatingOrderId = id;
+  currentRating = 0;
+  document.getElementById('ratingOrderId').textContent = '订单号：' + id;
+  document.getElementById('ratingComment').value = '';
+  document.querySelectorAll('#starRating .star').forEach(s => s.classList.remove('filled'));
+  document.getElementById('ratingModal').classList.add('show');
+}
+
+function closeRatingModal() {
+  document.getElementById('ratingModal').classList.remove('show');
+  currentRatingOrderId = null;
+}
+
+function setRating(rating) {
+  currentRating = rating;
+  document.querySelectorAll('#starRating .star').forEach((s, i) => {
+    s.classList.toggle('filled', i < rating);
+  });
+}
+
+function submitRating() {
+  if (currentRating === 0) {
+    showToast('请选择评分');
+    return;
+  }
+  const orders = loadOrders();
+  const idx = orders.findIndex(o => o.id === currentRatingOrderId);
+  if (idx >= 0) {
+    orders[idx].rating = currentRating;
+    orders[idx].ratingComment = document.getElementById('ratingComment').value.trim();
+    saveOrders(orders);
+    renderOrders();
+    renderDashboard();
+    showToast('感谢您的评价！⭐'.repeat(currentRating));
+  }
+  closeRatingModal();
+}
+
+function renderOrders() {
+  const orders = loadOrders();
+  const el = document.getElementById('ordersList');
+
+  let filtered = orders;
+  if (orderFilter === 'active') {
+    filtered = orders.filter(o => ['confirmed', 'pending', 'dispatched', 'enroute', 'fueling'].includes(o.status));
+  } else if (orderFilter === 'completed') {
+    filtered = orders.filter(o => o.status === 'completed');
+  } else if (orderFilter === 'cancelled') {
+    filtered = orders.filter(o => o.status === 'cancelled');
+  }
+
+  if (filtered.length === 0) {
+    const msgs = {
+      all: '暂无订单',
+      active: '暂无进行中的订单',
+      completed: '暂无已完成的订单',
+      cancelled: '暂无已取消的订单'
+    };
+    el.innerHTML = `<div class="empty-orders"><div class="icon">📋</div><p>${msgs[orderFilter] || '暂无订单'}</p><p style="font-size:13px;color:var(--text2);"><a href="#book" style="color:var(--accent);">立即预约加氢服务 →</a></p></div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(o => {
+    const statusClass = {
+      confirmed: 'status-confirmed', pending: 'status-pending',
+      dispatched: 'status-dispatched', enroute: 'status-enroute',
+      fueling: 'status-fueling', completed: 'status-completed', cancelled: 'status-cancelled'
+    }[o.status] || 'status-pending';
+    const statusText = {
+      confirmed:'已确认', pending:'待确认', dispatched:'已调度',
+      enroute:'配送中', fueling:'加注中', completed:'已完成', cancelled:'已取消'
+    }[o.status] || o.status;
+    const canCancel = ['confirmed', 'pending'].includes(o.status);
+    const canRate = o.status === 'completed' && o.rating === null;
+    const canReschedule = ['confirmed', 'pending'].includes(o.status);
+
+    // Progress bar for active orders
+    let progressHTML = '';
+    if (o.progress >= 0) {
+      const steps = ['已提交', '已确认', '已调度', '配送中', '加注中', '已完成'];
+      progressHTML = `<div class="progress-tracker" style="margin-top:12px;">`;
+      steps.forEach((label, i) => {
+        let cls = '';
+        if (o.progress > i) cls = 'done';
+        else if (o.progress === i) cls = 'active';
+        progressHTML += `
+          <div class="progress-step ${cls}">
+            <div class="progress-line"></div>
+            <div class="progress-dot">${o.progress > i ? '✓' : i + 1}</div>
+            <div class="progress-label">${label}</div>
+          </div>`;
+      });
+      progressHTML += `</div>`;
+    }
+
+    // Vehicle detail for batch orders
+    let vehicleDetail = '';
+    if (o.type === 'batch' && o.vehicles) {
+      vehicleDetail = o.vehicles.map(v =>
+        `<div class="order-meta">🚛 ${v.plate || '未填车牌'} · ${v.model} · ${v.kg}kg</div>`
+      ).join('');
+    }
+
+    // Rating display
+    let ratingHTML = '';
+    if (o.rating) {
+      ratingHTML = `<div class="order-meta" style="margin-top:4px;">⭐ ${'★'.repeat(o.rating)}${'☆'.repeat(5-o.rating)} ${o.ratingComment || ''}</div>`;
+    }
+
+    return `<div class="order-card">
+      <div class="order-header">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span class="order-status ${statusClass}">${statusText}</span>
+          <span style="font-weight:600;font-size:15px;">${o.id}</span>
+          ${o.type === 'recurring' ? '<span style="background:#f3e5f5;color:#7b1fa2;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;">周期</span>' : ''}
+          ${o.type === 'batch' ? '<span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;">批量</span>' : ''}
+        </div>
+        <div class="order-actions">
+          ${canReschedule ? `<button class="btn-reschedule" onclick="rescheduleOrder('${o.id}')">改签</button>` : ''}
+          ${canCancel ? `<button class="btn-cancel" onclick="cancelOrder('${o.id}')">取消</button>` : ''}
+          ${canRate ? `<button class="btn-rate" onclick="openRating('${o.id}')">⭐ 评价</button>` : ''}
+        </div>
+      </div>
+      ${progressHTML}
+      <div class="order-body">
+        <div class="order-detail-col">
+          ${o.type === 'recurring' ? `
+            <div class="order-detail-row"><strong>${o.freqLabel}</strong> · ${o.dayLabel} · ${o.timeSlot} · 每次${o.kg}kg/${o.vCount}辆</div>
+            <div class="order-detail-row">优惠价 ${o.pricePerKg}元/kg · 每次 ¥${o.total.toLocaleString()}</div>
+          ` : `
+            <div class="order-detail-row"><strong>${o.kg}kg</strong> · ${o.vCount}辆${o.vehicleLabel || ''} · ¥${o.total.toLocaleString()}</div>
+          `}
+          <div class="order-meta">📍 ${o.location}${o.address ? ' · ' + o.address : ''} &nbsp;|&nbsp; 📅 ${o.date || o.startDate} ${o.timeSlot || ''}</div>
+          ${o.company ? `<div class="order-meta">🏢 ${o.company} &nbsp;|&nbsp; 👤 ${o.name} ${o.phone}</div>` : `<div class="order-meta">👤 ${o.name} ${o.phone}</div>`}
+          ${vehicleDetail}
+          ${ratingHTML}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterOrders(filter, btn) {
+  orderFilter = filter;
+  document.querySelectorAll('#orderFilters .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+}
+
+function renderDashboard() {
+  const orders = loadOrders();
+  const completed = orders.filter(o => o.status === 'completed' || o.rating);
+  const totalOrders = orders.filter(o => o.status !== 'cancelled').length;
+  const totalKg = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.kg || 0), 0);
+  const totalSpent = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
+  const rated = orders.filter(o => o.rating);
+  const avgRating = rated.length > 0 ? (rated.reduce((s, o) => s + o.rating, 0) / rated.length).toFixed(1) : '—';
+
+  document.getElementById('statTotalOrders').textContent = totalOrders;
+  document.getElementById('statTotalKg').textContent = totalKg.toLocaleString() + ' kg';
+  document.getElementById('statTotalSpent').textContent = '¥' + totalSpent.toLocaleString();
+  document.getElementById('statAvgRating').textContent = avgRating + (avgRating !== '—' ? ' 分' : '');
+}
+
+function resetForm() {
+  document.getElementById('companyName').value = '';
+  document.getElementById('contactName').value = '';
+  document.getElementById('contactPhone').value = '';
+  document.getElementById('address').value = '';
+  document.getElementById('notes').value = '';
+  document.getElementById('serviceDate').value = '';
+  document.getElementById('serviceTime').value = '';
+  document.getElementById('hydrogenKg').value = '120';
+  document.getElementById('vehicleCount').value = '4';
+  document.getElementById('location').value = '';
+  updateSummary();
+}
+
+function closeModal() {
+  document.getElementById('successModal').classList.remove('show');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ========== Init ==========
+const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+const dateStr = tomorrow.toISOString().split('T')[0];
+document.getElementById('serviceDate').value = dateStr;
+document.getElementById('batchDate').value = dateStr;
+document.getElementById('recurStartDate').value = dateStr;
+
+['hydrogenKg','vehicleCount','location','serviceDate','serviceTime'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', updateSummary);
+    el.addEventListener('input', updateSummary);
+  }
+});
+
+document.querySelectorAll('input[name="vehicle"]').forEach(r => {
+  r.addEventListener('change', updateSummary);
+});
+
+// Batch listeners
+document.getElementById('batchLocation')?.addEventListener('change', () => {
+  calcBatchTotal();
+});
+document.querySelectorAll('#batchVehicleList .kg-input').forEach(inp => {
+  inp.addEventListener('change', calcBatchTotal);
+  inp.addEventListener('input', calcBatchTotal);
+});
+
+// Recurring listeners
+document.getElementById('recurKg')?.addEventListener('input', function() {
+  const kg = parseInt(this.value) || 0;
+  const v = parseInt(document.getElementById('recurVehicles').value) || 0;
+  const price = PRICING.basePrice - PRICING.recurringDiscount;
+  const monthly = kg * price * 4; // ~4 times/month for weekly
+  document.getElementById('recurMonthly').textContent = '¥' + monthly.toLocaleString();
+});
+
+updateSummary();
+calcBatchTotal();
+renderOrders();
+renderDashboard();
+</script>
+
+</body>
+</html>
